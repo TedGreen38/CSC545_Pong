@@ -1,3 +1,4 @@
+//CSC 545 Project
 int nballs = 1;
 int nballs2 = 10;
 Ball[] b = new Ball[nballs2];
