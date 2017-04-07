@@ -1,4 +1,3 @@
-//CSC 545 Project
 int nballs = 1;
 int nballs2 = 10;
 Ball[] b = new Ball[nballs2];
@@ -65,6 +64,7 @@ void draw() {
     for (int i = 0; i < nballs2; i++) {
       b[i].move();
       b[i].display();
+      
     }
     textFont(f3);
     textAlign(CENTER);
@@ -87,7 +87,11 @@ void draw() {
     background(0);
     
     textAlign(CENTER);
-    text(options_string, width/2, fontSize + 20);
+    text(options_string, width/2, fontSize2);
+    rect(width/2 - textWidth(start_string)/2, height -2*option_bar_height, textWidth(start_string), 3*option_bar_height/2);
+    fill(255);
+    textFont(f2);
+    text(start_string, width/2, height - option_bar_height);
     for (int i = 0; i < ys.length; i++){
       fill(255);
       stroke(0);
@@ -170,12 +174,14 @@ void draw() {
     
   }
   if (game == true){
+  
   background(0);
   fill(255);
   textAlign(RIGHT);
   text(p1_score, width/2 - 20, fontSize + 20);
   textAlign(LEFT);
   text(p2_score, width/2 + 20, fontSize + 20);
+  
   for (int i = 0; i < nballs; i++) {
     b[i].move();
     b[i].display();
@@ -225,6 +231,8 @@ void keyPressed() {
     game = true;
     start = false;
     options = false;
+    p1_score = 0;
+    p2_score = 0;
   }
   if(key == 's' || key == 'S'){
     start = true;
@@ -249,6 +257,15 @@ void keyReleased()
     keys[3]=false;
 }
 void mousePressed() {
+  textFont(f2);
+  if (options == true){
+  if((mouseButton == LEFT) && pmouseX>width/2- textWidth(start_string) && pmouseX<width/2+textWidth(start_string) && pmouseY>height - 2*option_bar_height && pmouseY<height-option_bar_height/2) {
+      game = true;
+      start = false;
+      options = false;
+      p1_score = 0;
+      p2_score = 0;
+  }
   if((mouseButton == LEFT) && pmouseX>xs[0] && pmouseX<xs[0]+option_bar_length && pmouseY>ys[0] && pmouseY<ys[0]+option_bar_height) {
     mpr[0] = true;
   }
@@ -267,6 +284,22 @@ void mousePressed() {
   if((mouseButton == LEFT) && pmouseX>xs[5] && pmouseX<xs[5]+option_bar_length && pmouseY>ys[5] && pmouseY<ys[5]+option_bar_height) {
     mpr[5] = true;
   }
+  }
+  if (start == true){
+    if((mouseButton == LEFT) && pmouseX>width/4- textWidth(start_string)/2 && pmouseX<width/4+textWidth(start_string)/2 && pmouseY>3*height/4 - option_bar_height && pmouseY<3*height/4+option_bar_height/2) {
+      game = true;
+      start = false;
+      options = false;
+      p1_score = 0;
+      p2_score = 0;
+    }
+    if((mouseButton == LEFT) && pmouseX>3*width/4- textWidth(options_string)/2 && pmouseX<3*width/4+textWidth(options_string)/2 && pmouseY>3*height/4 - option_bar_height && pmouseY<3*height/4+option_bar_height/2) {
+      game = false;
+      start = false;
+      options = true;
+    }
+  }
+
   /*
   else if((mouseButton == LEFT) && mouseX>width/4 && mouseX<3*width/4 && mouseY>3*height/4-(fontSize/2) && mouseY<3*height/4+(fontSize/2)) {
     xs[0] = constrain(mouseX, width/4, 3*width/4-10);

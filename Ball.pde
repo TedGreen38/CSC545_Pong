@@ -26,22 +26,29 @@ class Ball {
   void move() {
     xpos += this.xspeed;
     ypos += this.yspeed;
-    if (xpos > width-w/2 || xpos < w/2 ||   (game == true && ((xpos <= x1 + paddlew + w/2 && (ypos > y1 && (ypos < paddleh + y1))) && this.xspeed <0 ) || game == true &&((xpos >= x2 - w/2 && (ypos > y2 && (ypos < paddleh + y2))) && this.xspeed >0)) ) {
+    if ((xpos > width-w/2 || xpos < w/2) || (game == true && ((xpos <= x1 + paddlew + w/2 && (ypos > y1 && (ypos < paddleh + y1))) && this.xspeed <0 ) || game == true &&((xpos >= x2 - w/2 && (ypos > y2 && (ypos < paddleh + y2))) && this.xspeed >0)) ) {
       this.xspeed = -this.xspeed;
       println(this.xspeed);
     }
+
     if (ypos > height-h/2 || ypos < h/2) {
       this.yspeed = -this.yspeed;
       println(this.yspeed);
 
     }
-    if (xpos > width-w/2)
+    if (xpos > width-w/2 && game == true)
     {
       p1_score +=1;
+      xpos = width/2;
+      ypos = height/2;
+      
     }
-    if (xpos < w/2)
+    if (xpos < w/2 && game == true)
     {
       p2_score +=1;
+      xpos = width/2;
+      ypos = height/2;
+      
     }
   }
   void display() {
