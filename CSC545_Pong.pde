@@ -1,6 +1,7 @@
 int nballs = 1;
-int nballs2 = 10;
+int nballs2 = 30;
 Ball[] b = new Ball[nballs2];
+Ball[] b2 = new Ball[nballs2];
 boolean frozen = false;  //Controls freeze
 int x1 = 20;
 int y1 = 20;
@@ -33,11 +34,14 @@ int[] xs = {indention, indention, indention, indention, indention, indention};
 int[] ys = {100, 140, 180, 220, 260, 300};
 int option_bar_length = 300;
 int option_bar_height = 20;
-int xspeed2 = 1;
-int yspeed2 = 1;
+int xspeed = 1;
+int yspeed = 1;
+int w = 50;
+int h = 50;
 int options_color_red = 0;
 int options_color_green = 255;
 int currentTime = 0;
+int bin[] = {-1, 1};
 
 void setup() {
   size(600, 400);
@@ -53,6 +57,9 @@ void setup() {
   f3 = createFont("Arial", fontSize2);
   textFont(f);
   //noStroke();  //No border around ball
+  for (int i = 0; i < nballs; i++) {
+    b2[i] = new Ball();
+  }
   for (int i = 0; i < nballs2; i++) {
     b[i] = new Ball();
   }
@@ -61,11 +68,10 @@ void setup() {
 void draw() {
   if (start == true) {
     background(0);
-    for (int i = 0; i < nballs2; i++) {
-      b[i].move();
-      b[i].display();
-      
-    }
+    //for (int i = 0; i < nballs2; i++) {
+    //  b[i].move();
+    //  b[i].display();  
+    //}
     textFont(f3);
     textAlign(CENTER);
     fill(0, 255, 0);
@@ -82,7 +88,7 @@ void draw() {
     text(options_string, 3*width/4, 3*height/4);
     
   }
-  if (options == true) {
+  else if (options == true) {
     textFont(f);
     background(0);
     
@@ -108,13 +114,13 @@ void draw() {
     }
     if(mousePressed && (mouseButton == LEFT) && mpr[1] == true ) {
        xs[1] = constrain(xs[1] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
-      paddleh = int(map(xs[1], indention, indention+option_bar_length- slider, 350, 50));
+      paddleh = int(map(xs[1], indention, indention+option_bar_length- slider, 150, 50));
       //paddleh = m;
     }
     if(mousePressed && (mouseButton == LEFT) && mpr[2] == true ) {
        xs[2] = constrain(xs[2] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
-      xspeed2 = int(map(xs[2], indention, indention+option_bar_length- slider, 1, 10));
-      yspeed2 = int(map(xs[2], indention, indention+option_bar_length- slider, 1, 10));
+      xspeed = bin[int(random(0,2))]*int(map(xs[2], indention, indention+option_bar_length- slider, 1, 10));
+      yspeed = bin[int(random(0,2))]*int(map(xs[2], indention, indention+option_bar_length- slider, 1, 10));
       //xspeed = m;
       //yspeed = m;
     }
@@ -125,7 +131,8 @@ void draw() {
     }
     if(mousePressed && (mouseButton == LEFT) && mpr[4] == true ) {
        xs[4] = constrain(xs[4] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
-      m = int(map(xs[4], indention, indention+option_bar_length- slider, 120, 500));
+      w = int(map(xs[4], indention, indention+option_bar_length- slider, 50, 10));
+      h = w;
       //wpm = m;
     }
     if(mousePressed && (mouseButton == LEFT) && mpr[5] == true ) {
@@ -144,15 +151,20 @@ void draw() {
     fill((int(map(xs[1], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[1], indention, indention+option_bar_length- slider, 255, 0))), 0);
     text(paddleh, xs[1], ys[1]+option_bar_height);
     fill((int(map(xs[2], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[2], indention, indention+option_bar_length- slider, 255, 0))), 0);
-    text(xspeed2, xs[2], ys[2]+option_bar_height);
-    text(options_string, xs[3], ys[3]+option_bar_height);
-    text(options_string, xs[4], ys[4]+option_bar_height);
+    text(abs(xspeed), xs[2], ys[2]+option_bar_height);
+    fill((int(map(xs[3], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[3], indention, indention+option_bar_length- slider, 255, 0))), 0);
+    text(nballs, xs[3], ys[3]+option_bar_height);
+    fill((int(map(xs[4], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[4], indention, indention+option_bar_length- slider, 255, 0))), 0);
+    text(w, xs[4], ys[4]+option_bar_height);
+    fill((int(map(xs[5], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[5], indention, indention+option_bar_length- slider, 255, 0))), 0);
     text(options_string, xs[5], ys[5]+option_bar_height);
     
     fill(255);
     text(paddle_speed_string, 20, ys[0]+option_bar_height);
     text(paddle_length_string, 20, ys[1]+option_bar_height);
     text(ball_speed_string, 20, ys[2]+option_bar_height);
+    text("Number of Balls", 20, ys[3]+option_bar_height);
+    text("Ball Size", 20, ys[4]+option_bar_height);
     
     
 
@@ -160,6 +172,8 @@ void draw() {
     text(50, indention+option_bar_length +5, ys[0]+option_bar_height);
     text(50, indention+option_bar_length +5, ys[1]+option_bar_height);
     text(10, indention+option_bar_length +5, ys[2]+option_bar_height);
+    text(10, indention+option_bar_length +5, ys[3]+option_bar_height);
+    text(10, indention+option_bar_length +5, ys[4]+option_bar_height);
     
     
     textAlign(RIGHT);
@@ -167,13 +181,15 @@ void draw() {
     text(10, indention-5, ys[0]+option_bar_height);
     text(150, indention-5, ys[1]+option_bar_height);
     text(1, indention-5, ys[2]+option_bar_height);
+    text(1, indention-5, ys[3]+option_bar_height);
+    text(50, indention-5, ys[4]+option_bar_height);
     
     //noStroke();
 
 
     
   }
-  if (game == true){
+  else if (game == true){
   
   background(0);
   fill(255);
