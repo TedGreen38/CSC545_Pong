@@ -16,6 +16,7 @@ int fontSize = 36;
 int fontSize2 = 60;
 int p1_score = 0;
 int p2_score = 0;
+int winning = 10;
 String options_string = "Options";
 String start_string = "Start";
 String paddle_speed_string = "Paddle Speed";
@@ -56,7 +57,6 @@ void setup() {
   f2 = createFont("Arial", option_bar_height);
   f3 = createFont("Arial", fontSize2);
   textFont(f);
-  //noStroke();  //No border around ball
   for (int i = 0; i < nballs; i++) {
     b2[i] = new Ball();
   }
@@ -66,6 +66,11 @@ void setup() {
   background(0);
 }
 void draw() {
+  if (p1_score >= winning || p2_score >= winning) {
+    game = false;
+    start = true;
+    options = false;
+  }
   if (start == true) {
     background(0);
     //for (int i = 0; i < nballs2; i++) {
@@ -84,6 +89,12 @@ void draw() {
     textFont(f3);
     text(pongchamp, width/2, fontSize2 + fontSize2/2);
     textFont(f2);
+    if (p1_score >= winning ) {
+      text("Player 1 Wins!!!", width/2, fontSize2 + 2*fontSize2);
+    }
+    if (p2_score >= winning) {
+      text("Player 2 Wins!!!", width/2, fontSize2 + 2*fontSize2);
+    }
     text(start_string, width/4, 3*height/4);
     text(options_string, 3*width/4, 3*height/4);
     
@@ -106,23 +117,18 @@ void draw() {
       stroke(255);
       rect(indention, ys[i], option_bar_length, 20);
     }
-    //rect(20, 100, 50, 20);
     if(mousePressed && (mouseButton == LEFT) && mpr[0] == true ) {
        xs[0] = constrain(xs[0] + mouseX-pmouseX, indention, indention+option_bar_length - slider);
       paddle_speed = int(map(xs[0], indention, indention+option_bar_length - slider, 10, 50));
-      //paddle_speed = m;
     }
     if(mousePressed && (mouseButton == LEFT) && mpr[1] == true ) {
        xs[1] = constrain(xs[1] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
       paddleh = int(map(xs[1], indention, indention+option_bar_length- slider, 150, 50));
-      //paddleh = m;
     }
     if(mousePressed && (mouseButton == LEFT) && mpr[2] == true ) {
        xs[2] = constrain(xs[2] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
       xspeed = bin[int(random(0,2))]*int(map(xs[2], indention, indention+option_bar_length- slider, 1, 10));
       yspeed = bin[int(random(0,2))]*int(map(xs[2], indention, indention+option_bar_length- slider, 1, 10));
-      //xspeed = m;
-      //yspeed = m;
     }
     if(mousePressed && (mouseButton == LEFT) && mpr[3] == true ) {
        xs[3] = constrain(xs[3] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
@@ -133,12 +139,10 @@ void draw() {
        xs[4] = constrain(xs[4] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
       w = int(map(xs[4], indention, indention+option_bar_length- slider, 50, 10));
       h = w;
-      //wpm = m;
     }
     if(mousePressed && (mouseButton == LEFT) && mpr[5] == true ) {
        xs[5] = constrain(xs[5] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
       m = int(map(xs[5], indention, indention+option_bar_length- slider, 120, 500));
-      //wpm = m;
     }
     textFont(f2);
     fill(0);
@@ -183,45 +187,41 @@ void draw() {
     text(1, indention-5, ys[2]+option_bar_height);
     text(1, indention-5, ys[3]+option_bar_height);
     text(50, indention-5, ys[4]+option_bar_height);
-    
-    //noStroke();
-
-
-    
   }
   else if (game == true){
   
-  background(0);
-  fill(255);
-  textAlign(RIGHT);
-  text(p1_score, width/2 - 20, fontSize + 20);
-  textAlign(LEFT);
-  text(p2_score, width/2 + 20, fontSize + 20);
+    background(0);
+    fill(255);
+    textAlign(RIGHT);
+    text(p1_score, width/2 - 20, fontSize + 20);
+    textAlign(LEFT);
+    text(p2_score, width/2 + 20, fontSize + 20);
+    
+    for (int i = 0; i < nballs; i++) {
+      b[i].move();
+      b[i].display();
+    }
+      if( keys[0]) 
+    {  
+      y1 = constrain(y1 = y1 - paddle_speed, 0, height - paddleh);
+    }
+    if( keys[1]) 
+    {
+      y1 = constrain(y1 = y1 + paddle_speed, 0, height - paddleh);
+    }
+      if( keys[2]) 
+    {  
+      y2 = constrain(y2 = y2 - paddle_speed, 0, height - paddleh);
+    }
+    if( keys[3]) 
+    {
+      y2 = constrain(y2 = y2 + paddle_speed, 0, height - paddleh);
+    }
+    fill(255);
+    rect(x1, y1, paddlew, paddleh);
+    rect(x2, y2, paddlew, paddleh);
+  }
   
-  for (int i = 0; i < nballs; i++) {
-    b[i].move();
-    b[i].display();
-  }
-    if( keys[0]) 
-  {  
-    y1 = constrain(y1 = y1 - paddle_speed, 0, height - paddleh);
-  }
-  if( keys[1]) 
-  {
-    y1 = constrain(y1 = y1 + paddle_speed, 0, height - paddleh);
-  }
-    if( keys[2]) 
-  {  
-    y2 = constrain(y2 = y2 - paddle_speed, 0, height - paddleh);
-  }
-  if( keys[3]) 
-  {
-    y2 = constrain(y2 = y2 + paddle_speed, 0, height - paddleh);
-  }
-  fill(255);
-  rect(x1, y1, paddlew, paddleh);
-  rect(x2, y2, paddlew, paddleh);
-  }
 }
 void keyPressed() {
   if (key == ' ') {
@@ -254,11 +254,15 @@ void keyPressed() {
     start = true;
     game = false;
     options = false;
+    p1_score = 0;
+    p2_score = 0;
   }
   if(key == 'f' || key == 'F'){
     options = true;
     start = false;
     game = false;
+    p1_score = 0;
+    p2_score = 0;
   }
 }
 void keyReleased()
@@ -313,15 +317,10 @@ void mousePressed() {
       game = false;
       start = false;
       options = true;
+      p1_score = 0;
+      p2_score = 0;
     }
   }
-
-  /*
-  else if((mouseButton == LEFT) && mouseX>width/4 && mouseX<3*width/4 && mouseY>3*height/4-(fontSize/2) && mouseY<3*height/4+(fontSize/2)) {
-    xs[0] = constrain(mouseX, width/4, 3*width/4-10);
-    m = int(map(xs[0], width/4, 3*width/4 - 10, 120, 500));
-    wpm = m;
-  }*/
 }
 void mouseReleased() {
    mpr[1] = false;
