@@ -35,12 +35,13 @@ int[] xs = {indention, indention, indention, indention, indention, indention};
 int[] ys = {100, 140, 180, 220, 260, 300};
 int option_bar_length = 300;
 int option_bar_height = 20;
+int option_bar_text_offset = option_bar_height - 2;
 //Booleans for States
 boolean options = false;
 boolean start = true;
 boolean game = false;
 boolean[] mpr = {false, false, false, false, false, false};//Paddle control flags
-boolean[] keys;
+boolean[] keys = {false, false, false, false}; //Keys to move to paddles
 int m;
 int currentTime = 0;
 int bin[] = {-1, 1};
@@ -50,12 +51,6 @@ void setup() {
   x2 = width - x1 - paddlew;
   //colorMode(HSB, 360, 100, 100);
   
-  //Keys to move to paddles
-  keys=new boolean[4];
-  keys[0]=false;
-  keys[1]=false;
-  keys[2]=false;
-  keys[3]=false;
   //Various fonts
   f = createFont("Arial", fontSize);
   f2 = createFont("Arial", option_bar_height);
@@ -83,7 +78,7 @@ void draw() {
     start = true;
     options = false;
   }
-  //Start Screen
+  //=======================================================Start Screen============================================================
   if (start == true) {
     background(0);
     //Was Trying to make the start screen more interesting by having a bunch of balls flying around, couldnt get implemented
@@ -116,7 +111,8 @@ void draw() {
     text(options_string, 3*width/4, 3*height/4);
     
   }
-  //Options Menu
+  
+  //===================================================Options Menu==========================================================
   else if (options == true) {
     textFont(f);
     background(0);
@@ -167,51 +163,53 @@ void draw() {
        xs[5] = constrain(xs[5] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
       m = int(map(xs[5], indention, indention+option_bar_length- slider, 120, 500));
     }
+    
     //Here are all the text elements to go along with the options sliders
     textFont(f2);
     fill(0);
-    textAlign(LEFT);
+    textAlign(CENTER);
     stroke(0);
     strokeWeight(2);
     fill((int(map(xs[0], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[0], indention, indention+option_bar_length- slider, 255, 0))), 0);
-    text(paddle_speed, xs[0], ys[0]+option_bar_height);
+    text(paddle_speed, xs[0]+slider/2, ys[0]+option_bar_text_offset);
     fill((int(map(xs[1], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[1], indention, indention+option_bar_length- slider, 255, 0))), 0);
-    text(paddleh, xs[1], ys[1]+option_bar_height);
+    text(paddleh, xs[1]+slider/2, ys[1]+option_bar_text_offset);
     fill((int(map(xs[2], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[2], indention, indention+option_bar_length- slider, 255, 0))), 0);
-    text(abs(xspeed), xs[2], ys[2]+option_bar_height);
+    text(abs(xspeed), xs[2]+slider/2, ys[2]+option_bar_text_offset);
     fill((int(map(xs[3], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[3], indention, indention+option_bar_length- slider, 255, 0))), 0);
-    text(nballs, xs[3], ys[3]+option_bar_height);
+    text(nballs, xs[3]+slider/2, ys[3]+option_bar_text_offset);
     fill((int(map(xs[4], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[4], indention, indention+option_bar_length- slider, 255, 0))), 0);
-    text(w, xs[4], ys[4]+option_bar_height);
+    text(w, xs[4]+slider/2, ys[4]+option_bar_text_offset);
     fill((int(map(xs[5], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[5], indention, indention+option_bar_length- slider, 255, 0))), 0);
-    text(options_string, xs[5], ys[5]+option_bar_height);
+    text(options_string, xs[5]+slider/2, ys[5]+option_bar_text_offset);
     
+    //  Options Text
+    textAlign(LEFT);
     fill(255);
-    text(paddle_speed_string, 20, ys[0]+option_bar_height);
-    text(paddle_length_string, 20, ys[1]+option_bar_height);
-    text(ball_speed_string, 20, ys[2]+option_bar_height);
-    text("Number of Balls", 20, ys[3]+option_bar_height);
-    text("Ball Size", 20, ys[4]+option_bar_height);
+    text(paddle_speed_string, 20, ys[0]+option_bar_text_offset);
+    text(paddle_length_string, 20, ys[1]+option_bar_text_offset);
+    text(ball_speed_string, 20, ys[2]+option_bar_text_offset);
+    text("Number of Balls", 20, ys[3]+option_bar_text_offset);
+    text("Ball Size", 20, ys[4]+option_bar_text_offset);
     
-    
-
+    //  Hard/Max values to the right of bar
     fill(255, 0, 0);
-    text(50, indention+option_bar_length +5, ys[0]+option_bar_height);
-    text(50, indention+option_bar_length +5, ys[1]+option_bar_height);
-    text(10, indention+option_bar_length +5, ys[2]+option_bar_height);
-    text(10, indention+option_bar_length +5, ys[3]+option_bar_height);
-    text(10, indention+option_bar_length +5, ys[4]+option_bar_height);
+    text(50, indention+option_bar_length +5, ys[0]+option_bar_text_offset);
+    text(50, indention+option_bar_length +5, ys[1]+option_bar_text_offset);
+    text(10, indention+option_bar_length +5, ys[2]+option_bar_text_offset);
+    text(10, indention+option_bar_length +5, ys[3]+option_bar_text_offset);
+    text(10, indention+option_bar_length +5, ys[4]+option_bar_text_offset);
     
-    
+    //  Min/Easy Values to the left of bar
     textAlign(RIGHT);
     fill(0, 255, 0);
-    text(10, indention-5, ys[0]+option_bar_height);
-    text(150, indention-5, ys[1]+option_bar_height);
-    text(1, indention-5, ys[2]+option_bar_height);
-    text(1, indention-5, ys[3]+option_bar_height);
-    text(50, indention-5, ys[4]+option_bar_height);
+    text(10, indention-5, ys[0]+option_bar_text_offset);
+    text(150, indention-5, ys[1]+option_bar_text_offset);
+    text(1, indention-5, ys[2]+option_bar_text_offset);
+    text(1, indention-5, ys[3]+option_bar_text_offset);
+    text(50, indention-5, ys[4]+option_bar_text_offset);
   }
-  //Game state
+  //================================================Game state=================================================
   else if (game == true){
   
     background(0);
