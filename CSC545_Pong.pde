@@ -1,5 +1,7 @@
 int nballs = 1;
-Ball[] b = new Ball[nballs];
+int nballs2 = 30;
+Ball[] b = new Ball[nballs2];
+Ball[] b2 = new Ball[nballs2];
 boolean frozen = false;  //Controls freeze
 int x1 = 20;
 int y1 = 20;
@@ -9,58 +11,217 @@ int x2 = width - 20;
 int y2 = y1;
 int paddle_speed = 10;
 boolean[] keys;
-PFont f;
+PFont f, f2, f3;
 int fontSize = 36;
+int fontSize2 = 60;
 int p1_score = 0;
 int p2_score = 0;
+int winning = 10;
+String options_string = "Options";
+String start_string = "Start";
+String paddle_speed_string = "Paddle Speed";
+String paddle_length_string = "Paddle Length";
+String ball_speed_string = "Ball Speed";
+String pongchamp = "PongChamp";
+boolean options = false;
+boolean start = true;
+boolean game = false;
+boolean[] mpr = {false, false, false, false, false, false};
+int wpm = 3;
+int m = wpm;
+int indention = 220;
+int slider = 50;
+int[] xs = {indention, indention, indention, indention, indention, indention};
+int[] ys = {100, 140, 180, 220, 260, 300};
+int option_bar_length = 300;
+int option_bar_height = 20;
+int xspeed = 1;
+int yspeed = 1;
+int w = 50;
+int h = 50;
+int options_color_red = 0;
+int options_color_green = 255;
+int currentTime = 0;
+int bin[] = {-1, 1};
 
 void setup() {
   size(600, 400);
   x2 = width - x1 - paddlew;
-  colorMode(HSB, 360, 100, 100);
+  //colorMode(HSB, 360, 100, 100);
   keys=new boolean[4];
   keys[0]=false;
   keys[1]=false;
   keys[2]=false;
   keys[3]=false;
   f = createFont("Arial", fontSize);
+  f2 = createFont("Arial", option_bar_height);
+  f3 = createFont("Arial", fontSize2);
   textFont(f);
-  //noStroke();  //No border around ball
   for (int i = 0; i < nballs; i++) {
+    b2[i] = new Ball();
+  }
+  for (int i = 0; i < nballs2; i++) {
     b[i] = new Ball();
   }
   background(0);
 }
 void draw() {
-  background(0);
-  fill(255);
-  textAlign(RIGHT);
-  text(p1_score, width/2 - 20, fontSize + 20);
-  textAlign(LEFT);
-  text(p2_score, width/2 + 20, fontSize + 20);
-  for (int i = 0; i < b.length; i++) {
-    b[i].move();
-    b[i].display();
+  if (p1_score >= winning || p2_score >= winning) {
+    game = false;
+    start = true;
+    options = false;
   }
-    if( keys[0]) 
-  {  
-    y1 = constrain(y1 = y1 - paddle_speed, 0, height - paddleh);
+  if (start == true) {
+    background(0);
+    //for (int i = 0; i < nballs2; i++) {
+    //  b[i].move();
+    //  b[i].display();  
+    //}
+    textFont(f3);
+    textAlign(CENTER);
+    fill(0, 255, 0);
+    rect(width/2 - textWidth(pongchamp)/2, fontSize2/2, textWidth(pongchamp), 3*fontSize2/2);
+    textFont(f2);
+    rect(width/4 - textWidth(start_string)/2, 3*height/4 -option_bar_height, textWidth(start_string), 3*option_bar_height/2);
+    rect(3*width/4 - textWidth(options_string)/2, 3*height/4 -option_bar_height, textWidth(options_string), 3*option_bar_height/2);
+    fill(255);
+    //rectMode(CENTER);
+    textFont(f3);
+    text(pongchamp, width/2, fontSize2 + fontSize2/2);
+    textFont(f2);
+    if (p1_score >= winning ) {
+      text("Player 1 Wins!!!", width/2, fontSize2 + 2*fontSize2);
+    }
+    if (p2_score >= winning) {
+      text("Player 2 Wins!!!", width/2, fontSize2 + 2*fontSize2);
+    }
+    text(start_string, width/4, 3*height/4);
+    text(options_string, 3*width/4, 3*height/4);
+    
   }
-  if( keys[1]) 
-  {
-    y1 = constrain(y1 = y1 + paddle_speed, 0, height - paddleh);
+  else if (options == true) {
+    textFont(f);
+    background(0);
+    
+    textAlign(CENTER);
+    text(options_string, width/2, fontSize2);
+    rect(width/2 - textWidth(start_string)/2, height -2*option_bar_height, textWidth(start_string), 3*option_bar_height/2);
+    fill(255);
+    textFont(f2);
+    text(start_string, width/2, height - option_bar_height);
+    for (int i = 0; i < ys.length; i++){
+      fill(255);
+      stroke(0);
+      rect(xs[i], ys[i], 50, 20);
+      noFill();
+      stroke(255);
+      rect(indention, ys[i], option_bar_length, 20);
+    }
+    if(mousePressed && (mouseButton == LEFT) && mpr[0] == true ) {
+       xs[0] = constrain(xs[0] + mouseX-pmouseX, indention, indention+option_bar_length - slider);
+      paddle_speed = int(map(xs[0], indention, indention+option_bar_length - slider, 10, 50));
+    }
+    if(mousePressed && (mouseButton == LEFT) && mpr[1] == true ) {
+       xs[1] = constrain(xs[1] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
+      paddleh = int(map(xs[1], indention, indention+option_bar_length- slider, 150, 50));
+    }
+    if(mousePressed && (mouseButton == LEFT) && mpr[2] == true ) {
+       xs[2] = constrain(xs[2] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
+      xspeed = bin[int(random(0,2))]*int(map(xs[2], indention, indention+option_bar_length- slider, 1, 10));
+      yspeed = bin[int(random(0,2))]*int(map(xs[2], indention, indention+option_bar_length- slider, 1, 10));
+    }
+    if(mousePressed && (mouseButton == LEFT) && mpr[3] == true ) {
+       xs[3] = constrain(xs[3] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
+      nballs = int(map(xs[3], indention, indention+option_bar_length- slider, 1, 10));
+      //nballs = m;
+    }
+    if(mousePressed && (mouseButton == LEFT) && mpr[4] == true ) {
+       xs[4] = constrain(xs[4] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
+      w = int(map(xs[4], indention, indention+option_bar_length- slider, 50, 10));
+      h = w;
+    }
+    if(mousePressed && (mouseButton == LEFT) && mpr[5] == true ) {
+       xs[5] = constrain(xs[5] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
+      m = int(map(xs[5], indention, indention+option_bar_length- slider, 120, 500));
+    }
+    textFont(f2);
+    fill(0);
+    
+    textAlign(LEFT);
+    stroke(0);
+    strokeWeight(2);
+    fill((int(map(xs[0], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[0], indention, indention+option_bar_length- slider, 255, 0))), 0);
+    text(paddle_speed, xs[0], ys[0]+option_bar_height);
+    fill((int(map(xs[1], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[1], indention, indention+option_bar_length- slider, 255, 0))), 0);
+    text(paddleh, xs[1], ys[1]+option_bar_height);
+    fill((int(map(xs[2], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[2], indention, indention+option_bar_length- slider, 255, 0))), 0);
+    text(abs(xspeed), xs[2], ys[2]+option_bar_height);
+    fill((int(map(xs[3], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[3], indention, indention+option_bar_length- slider, 255, 0))), 0);
+    text(nballs, xs[3], ys[3]+option_bar_height);
+    fill((int(map(xs[4], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[4], indention, indention+option_bar_length- slider, 255, 0))), 0);
+    text(w, xs[4], ys[4]+option_bar_height);
+    fill((int(map(xs[5], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[5], indention, indention+option_bar_length- slider, 255, 0))), 0);
+    text(options_string, xs[5], ys[5]+option_bar_height);
+    
+    fill(255);
+    text(paddle_speed_string, 20, ys[0]+option_bar_height);
+    text(paddle_length_string, 20, ys[1]+option_bar_height);
+    text(ball_speed_string, 20, ys[2]+option_bar_height);
+    text("Number of Balls", 20, ys[3]+option_bar_height);
+    text("Ball Size", 20, ys[4]+option_bar_height);
+    
+    
+
+    fill(255, 0, 0);
+    text(50, indention+option_bar_length +5, ys[0]+option_bar_height);
+    text(50, indention+option_bar_length +5, ys[1]+option_bar_height);
+    text(10, indention+option_bar_length +5, ys[2]+option_bar_height);
+    text(10, indention+option_bar_length +5, ys[3]+option_bar_height);
+    text(10, indention+option_bar_length +5, ys[4]+option_bar_height);
+    
+    
+    textAlign(RIGHT);
+    fill(0, 255, 0);
+    text(10, indention-5, ys[0]+option_bar_height);
+    text(150, indention-5, ys[1]+option_bar_height);
+    text(1, indention-5, ys[2]+option_bar_height);
+    text(1, indention-5, ys[3]+option_bar_height);
+    text(50, indention-5, ys[4]+option_bar_height);
   }
-    if( keys[2]) 
-  {  
-    y2 = constrain(y2 = y2 - paddle_speed, 0, height - paddleh);
+  else if (game == true){
+  
+    background(0);
+    fill(255);
+    textAlign(RIGHT);
+    text(p1_score, width/2 - 20, fontSize + 20);
+    textAlign(LEFT);
+    text(p2_score, width/2 + 20, fontSize + 20);
+    
+    for (int i = 0; i < nballs; i++) {
+      b[i].move();
+      b[i].display();
+    }
+      if( keys[0]) 
+    {  
+      y1 = constrain(y1 = y1 - paddle_speed, 0, height - paddleh);
+    }
+    if( keys[1]) 
+    {
+      y1 = constrain(y1 = y1 + paddle_speed, 0, height - paddleh);
+    }
+      if( keys[2]) 
+    {  
+      y2 = constrain(y2 = y2 - paddle_speed, 0, height - paddleh);
+    }
+    if( keys[3]) 
+    {
+      y2 = constrain(y2 = y2 + paddle_speed, 0, height - paddleh);
+    }
+    fill(255);
+    rect(x1, y1, paddlew, paddleh);
+    rect(x2, y2, paddlew, paddleh);
   }
-  if( keys[3]) 
-  {
-    y2 = constrain(y2 = y2 + paddle_speed, 0, height - paddleh);
-  }
-  fill(255);
-  rect(x1, y1, paddlew, paddleh);
-  rect(x2, y2, paddlew, paddleh);
+  
 }
 void keyPressed() {
   if (key == ' ') {
@@ -82,6 +243,27 @@ void keyPressed() {
     keys[2]=true;
   if(key == 'l' || key == 'L')
     keys[3]=true;
+  if(key == 'g' || key == 'G'){
+    game = true;
+    start = false;
+    options = false;
+    p1_score = 0;
+    p2_score = 0;
+  }
+  if(key == 's' || key == 'S'){
+    start = true;
+    game = false;
+    options = false;
+    p1_score = 0;
+    p2_score = 0;
+  }
+  if(key == 'f' || key == 'F'){
+    options = true;
+    start = false;
+    game = false;
+    p1_score = 0;
+    p2_score = 0;
+  }
 }
 void keyReleased()
 {
@@ -93,4 +275,59 @@ void keyReleased()
     keys[2]=false;
   if(key == 'l' || key == 'L')
     keys[3]=false;
-} 
+}
+void mousePressed() {
+  textFont(f2);
+  if (options == true){
+  if((mouseButton == LEFT) && pmouseX>width/2- textWidth(start_string) && pmouseX<width/2+textWidth(start_string) && pmouseY>height - 2*option_bar_height && pmouseY<height-option_bar_height/2) {
+      game = true;
+      start = false;
+      options = false;
+      p1_score = 0;
+      p2_score = 0;
+  }
+  if((mouseButton == LEFT) && pmouseX>xs[0] && pmouseX<xs[0]+option_bar_length && pmouseY>ys[0] && pmouseY<ys[0]+option_bar_height) {
+    mpr[0] = true;
+  }
+  if((mouseButton == LEFT) && pmouseX>xs[1] && pmouseX<xs[1]+option_bar_length && pmouseY>ys[1] && pmouseY<ys[1]+option_bar_height) {
+    mpr[1] = true;
+  }
+  if((mouseButton == LEFT) && pmouseX>xs[2] && pmouseX<xs[2]+option_bar_length && pmouseY>ys[2] && pmouseY<ys[2]+option_bar_height) {
+    mpr[2] = true;
+  }
+  if((mouseButton == LEFT) && pmouseX>xs[3] && pmouseX<xs[3]+option_bar_length && pmouseY>ys[3] && pmouseY<ys[3]+option_bar_height) {
+    mpr[3] = true;
+  }
+  if((mouseButton == LEFT) && pmouseX>xs[4] && pmouseX<xs[4]+option_bar_length && pmouseY>ys[4] && pmouseY<ys[4]+option_bar_height) {
+    mpr[4] = true;
+  }
+  if((mouseButton == LEFT) && pmouseX>xs[5] && pmouseX<xs[5]+option_bar_length && pmouseY>ys[5] && pmouseY<ys[5]+option_bar_height) {
+    mpr[5] = true;
+  }
+  }
+  if (start == true){
+    if((mouseButton == LEFT) && pmouseX>width/4- textWidth(start_string)/2 && pmouseX<width/4+textWidth(start_string)/2 && pmouseY>3*height/4 - option_bar_height && pmouseY<3*height/4+option_bar_height/2) {
+      game = true;
+      start = false;
+      options = false;
+      p1_score = 0;
+      p2_score = 0;
+    }
+    if((mouseButton == LEFT) && pmouseX>3*width/4- textWidth(options_string)/2 && pmouseX<3*width/4+textWidth(options_string)/2 && pmouseY>3*height/4 - option_bar_height && pmouseY<3*height/4+option_bar_height/2) {
+      game = false;
+      start = false;
+      options = true;
+      p1_score = 0;
+      p2_score = 0;
+    }
+  }
+}
+void mouseReleased() {
+   mpr[1] = false;
+   mpr[2] = false;
+   mpr[3] = false;
+   mpr[4] = false;
+   mpr[5] = false;
+   mpr[0] = false;
+
+}
