@@ -1,7 +1,7 @@
-int nballs = 1;//game balls
-int nballs2 = 30;//start menu balls visual
-Ball[] b = new Ball[nballs2];
-Ball[] b2 = new Ball[nballs2];
+int game_balls = 1;//game balls
+int max_balls = 30;//start menu balls visual
+Ball[] b = new Ball[max_balls];
+Ball[] b2 = new Ball[max_balls];
 boolean frozen = false;  //Controls freeze
 //Paddle start location
 int x1 = 20;
@@ -16,8 +16,7 @@ int p1_score = 0;
 int p2_score = 0;
 int xspeed = 1;
 int yspeed = 1;
-int w = 50;
-int h = 50;
+int ball_radius = 50;
 int winning = 10;
 //Variables for text
 PFont f, f2, f3;
@@ -58,11 +57,11 @@ void setup() {
   textFont(f);
   
   // two sets of balls, one for the game balls and one for start menu graphics
-  for (int i = 0; i < nballs; i++) {
-    b2[i] = new Ball();
+  for (int i = 0; i < game_balls; i++) {
+    b2[i] = new Ball(ball_radius);
   }
-  for (int i = 0; i < nballs2; i++) {
-    b[i] = new Ball();
+  for (int i = 0; i < max_balls; i++) {
+    b[i] = new Ball(ball_radius);
   }
   background(0);
 }
@@ -82,7 +81,7 @@ void draw() {
   if (start == true) {
     background(0);
     //Was Trying to make the start screen more interesting by having a bunch of balls flying around, couldnt get implemented
-    //for (int i = 0; i < nballs2; i++) {
+    //for (int i = 0; i < max_balls; i++) {
     //  b[i].move();
     //  b[i].display();  
     //}
@@ -152,12 +151,14 @@ void draw() {
     }
     if(mousePressed && (mouseButton == LEFT) && mpr[3] == true ) {
        xs[3] = constrain(xs[3] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
-      nballs = int(map(xs[3], indention, indention+option_bar_length- slider, 1, 10));
+      game_balls = int(map(xs[3], indention, indention+option_bar_length- slider, 1, 10));
     }
     if(mousePressed && (mouseButton == LEFT) && mpr[4] == true ) {
        xs[4] = constrain(xs[4] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
-      w = int(map(xs[4], indention, indention+option_bar_length- slider, 50, 10));
-      h = w;
+      ball_radius = int(map(xs[4], indention, indention+option_bar_length- slider, 50, 10));
+      for (int i = 0; i < game_balls; i++) {
+        b[i].update_radius(ball_radius);
+      }
     }
     if(mousePressed && (mouseButton == LEFT) && mpr[5] == true ) {
        xs[5] = constrain(xs[5] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
@@ -177,9 +178,9 @@ void draw() {
     fill((int(map(xs[2], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[2], indention, indention+option_bar_length- slider, 255, 0))), 0);
     text(abs(xspeed), xs[2]+slider/2, ys[2]+option_bar_text_offset);
     fill((int(map(xs[3], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[3], indention, indention+option_bar_length- slider, 255, 0))), 0);
-    text(nballs, xs[3]+slider/2, ys[3]+option_bar_text_offset);
+    text(game_balls, xs[3]+slider/2, ys[3]+option_bar_text_offset);
     fill((int(map(xs[4], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[4], indention, indention+option_bar_length- slider, 255, 0))), 0);
-    text(w, xs[4]+slider/2, ys[4]+option_bar_text_offset);
+    text(ball_radius, xs[4]+slider/2, ys[4]+option_bar_text_offset);
     fill((int(map(xs[5], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[5], indention, indention+option_bar_length- slider, 255, 0))), 0);
     text(options_string, xs[5]+slider/2, ys[5]+option_bar_text_offset);
     
@@ -220,7 +221,7 @@ void draw() {
     textAlign(LEFT);
     text(p2_score, width/2 + 20, fontSize + 20);
     //Creation of the game ball/s
-    for (int i = 0; i < nballs; i++) {
+    for (int i = 0; i < game_balls; i++) {
       b[i].move();
       b[i].display();
     }
@@ -261,17 +262,19 @@ void keyPressed() {
     background(0);
   }
   //Keypresses for paddle movement
-  if(key == 'q' || key == 'Q')
+  if(key == 'w' || key == 'W')
     keys[0]=true;
-  if(key == 'a' || key == 'A')
+  if(key == 's' || key == 'S')
     keys[1]=true;
-  if(key == 'o' || key == 'O')
-    keys[2]=true;
-  if(key == 'l' || key == 'L')
-    keys[3]=true;
+  if(key == CODED){
+    if(keyCode == UP)
+      keys[2]=true;
+    if(keyCode == DOWN)
+      keys[3]=true;
+  }
     
   //Keypress to change states, was planning to remove, was only using for troubleshooting
-  if(key == 'g' || key == 'G'){
+  /*if(key == 'g' || key == 'G'){
     game = true;
     start = false;
     options = false;
@@ -284,26 +287,28 @@ void keyPressed() {
     options = false;
     p1_score = 0;
     p2_score = 0;
-  }
+  }*/
   if(key == 'f' || key == 'F'){
     options = true;
     start = false;
     game = false;
     p1_score = 0;
     p2_score = 0;
-  }
+  }//*/
 }
 void keyReleased()
 {
   //for paddle movement
-  if(key == 'q' || key == 'Q')
+  if(key == 'w' || key == 'W')
     keys[0]=false;
-  if(key == 'a' || key == 'A')
+  if(key == 's' || key == 'S')
     keys[1]=false;
-  if(key == 'o' || key == 'O')
-    keys[2]=false;
-  if(key == 'l' || key == 'L')
-    keys[3]=false;
+  if(key == CODED){
+    if(keyCode == UP)
+      keys[2]=false;
+    if(keyCode == DOWN)
+      keys[3]=false;
+  }
 }
 void mousePressed() {
   //This is where i implemented clicking of buttons
