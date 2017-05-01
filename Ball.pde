@@ -1,79 +1,72 @@
 //Basic ball class
 class Ball {
   int xpos, ypos;
-  int xspeed;
-  int yspeed;
-  int radius;
-  int diameter;
+  int xspeed, yspeed;
+  int start_speed;
+  int radius, diameter;
+  int currentTime = 0;
   color c; 
+  int bin[] = {-1, 1};
   Ball(int r) {
-    //w = int(random(10, 51));
-    //xpos = int(random(w, width-w));
-    //ypos = int(random(h, height-h));
+    //starting x and y positions
     xpos = width/2;
     ypos = height/2;
+    //starting radius and diameter. These can be updated in the menu
     radius = r;
     diameter = radius*2;
-    xspeed = bin[int(random(0,2))]*1;
-    yspeed = bin[int(random(0,2))]*1;
-    //xspeed = int(random(1, 6));
-    //yspeed = int(random(1, 6));
+    //starting x/y speeds
+    xspeed = bin[int(random(0,2))];
+    yspeed = bin[int(random(0,2))];
+    start_speed = abs(xspeed);
 
     int hu = int(random(0, 360));
     int sat = 100; //int(random(0, 101));
     int br = 100; //int(random(0, 101));
     c = color(hu, sat, br);
   }
-  void move() {
+  
+  //move the ball based on speed
+  void move() {    
     //Pauses ball movement at center after a point is scored
     if (millis()-1500 > currentTime){
       xpos += xspeed;
       ypos += yspeed;
     }
-    //This grotesque boolean checks if the ball is bouncing off anything. I'm not really sure how to break this up into more manageable pieces.
-    /*if ((xpos > width-radius || xpos < radius) || (game == true && ((xpos <= x1 + paddlew + radius && (ypos > y1 && (ypos < paddleh + y1))) && xspeed <0 ) || game == true &&((xpos >= x2 - radius && (ypos > y2 && (ypos < paddleh + y2))) && xspeed >0)) ) {
-      xspeed = -xspeed;
-      //println(xspeed);
-    }*/
-    //Broke up that grotesque boolean. It's a little more manageable but still pretty ugly
-    if (game == true){
-      if((xpos <= x1 + paddlew + radius) && (ypos > y1) && (ypos < paddleh + y1) && (xspeed <0 ))
-        xspeed = -xspeed;
-      if((xpos >= x2 - radius) && (ypos > y2) && (ypos < paddleh + y2) && (xspeed >0))
-        xspeed = -xspeed;
-    }
-    if(!game){
-      if(xpos > width-radius || xpos < radius)
-        xspeed = -xspeed;
-    }
-    if (ypos > height-radius || ypos < radius) {
-      yspeed = -yspeed;
-      //println(yspeed);
-
-    }
-    //when the ball hits the wall, player 1 a point
-    if (xpos > width-radius && game == true)
-    {
-      p1_score +=1;
-      xpos = width/2;
-      ypos = height/2;
-      currentTime = millis();
-      
-    }
-    //when the ball hits the wall, player 2 a point
-    if (xpos < radius && game == true)
-    {
-      p2_score +=1;
-      xpos = width/2;
-      ypos = height/2;
-      currentTime = millis();
-      
-    }
   }
+  
+  //update start speed from the options menu
+  void update_speed(int speed){
+    xspeed = speed;
+    yspeed = speed;
+    start_speed = speed;
+  }
+  
+  //update the radius from the options menu
   void update_radius(int r){
     radius = r;
     diameter = radius*2;
   }
+  
+  //reset the ball to its beginning parameters
+  void reset_ball(){
+     xpos = width/2;
+     ypos = height/2;
+     xspeed = bin[int(random(0,2))]*start_speed;
+     yspeed = bin[int(random(0,2))]*start_speed;
+     currentTime = millis();
+  }
+  
+  //reverse the xspeed when the ball hits a paddle
+  void reverse_x_speed(){
+    xspeed = -xspeed;
+  }
+  
+  //reverse y speed when ball hits the ceiling or floor  
+  void reverse_y_speed(){
+    yspeed = -yspeed;
+  }
+  
+  //display the ball
   void display() {
     fill(c);
     ellipse(xpos, ypos, diameter, diameter);

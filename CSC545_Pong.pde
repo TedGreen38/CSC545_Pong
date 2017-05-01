@@ -1,23 +1,25 @@
+int window_width = 600;
+int window_height = 400;
 int game_balls = 1;//game balls
-int max_balls = 30;//start menu balls visual
+int max_balls = 10;//start menu balls visual
 Ball[] b = new Ball[max_balls];
 Ball[] b2 = new Ball[max_balls];
 boolean frozen = false;  //Controls freeze
-//Paddle start location
-int x1 = 20;
-int y1 = 20;
-int x2 = width - 20;
-int y2 = y1;
 //Here are the variable for game options starting values.
 int paddlew = 10;
 int paddleh = 150;
 int paddle_speed = 10;
 int p1_score = 0;
 int p2_score = 0;
-int xspeed = 1;
-int yspeed = 1;
+int ball_speed = 1;
 int ball_radius = 50;
 int winning = 10;
+//Paddle variables 
+int paddle1_start_x = 20;
+int paddle2_start_x = window_width - 20-paddlew;
+int paddles_start_y = 20;
+Paddle player1 = new Paddle(paddle1_start_x, paddles_start_y, paddlew, paddleh);
+Paddle player2 = new Paddle(paddle2_start_x, paddles_start_y, paddlew, paddleh);
 //Variables for text
 PFont f, f2, f3;
 int fontSize = 36;
@@ -47,7 +49,6 @@ int bin[] = {-1, 1};
 
 void setup() {
   size(600, 400);
-  x2 = width - x1 - paddlew;
   //colorMode(HSB, 360, 100, 100);
   
   //Various fonts
@@ -139,15 +140,21 @@ void draw() {
     if(mousePressed && (mouseButton == LEFT) && mpr[0] == true ) {
        xs[0] = constrain(xs[0] + mouseX-pmouseX, indention, indention+option_bar_length - slider);
       paddle_speed = int(map(xs[0], indention, indention+option_bar_length - slider, 10, 50));
+      player1.update_speed(paddle_speed);
+      player2.update_speed(paddle_speed);
     }
     if(mousePressed && (mouseButton == LEFT) && mpr[1] == true ) {
-       xs[1] = constrain(xs[1] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
+      xs[1] = constrain(xs[1] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
       paddleh = int(map(xs[1], indention, indention+option_bar_length- slider, 150, 50));
+      player1.update_length(paddleh);
+      player2.update_length(paddleh);
     }
     if(mousePressed && (mouseButton == LEFT) && mpr[2] == true ) {
-       xs[2] = constrain(xs[2] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
-      xspeed = bin[int(random(0,2))]*int(map(xs[2], indention, indention+option_bar_length- slider, 1, 10));
-      yspeed = bin[int(random(0,2))]*int(map(xs[2], indention, indention+option_bar_length- slider, 1, 10));
+      xs[2] = constrain(xs[2] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
+      ball_speed = bin[int(random(0,2))]*int(map(xs[2], indention, indention+option_bar_length- slider, 1, 10));
+      for (int i = 0; i < game_balls; i++) {
+        b[i].update_speed(ball_speed);
+      }
     }
     if(mousePressed && (mouseButton == LEFT) && mpr[3] == true ) {
        xs[3] = constrain(xs[3] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
@@ -176,7 +183,7 @@ void draw() {
     fill((int(map(xs[1], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[1], indention, indention+option_bar_length- slider, 255, 0))), 0);
     text(paddleh, xs[1]+slider/2, ys[1]+option_bar_text_offset);
     fill((int(map(xs[2], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[2], indention, indention+option_bar_length- slider, 255, 0))), 0);
-    text(abs(xspeed), xs[2]+slider/2, ys[2]+option_bar_text_offset);
+    text(abs(ball_speed), xs[2]+slider/2, ys[2]+option_bar_text_offset);
     fill((int(map(xs[3], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[3], indention, indention+option_bar_length- slider, 255, 0))), 0);
     text(game_balls, xs[3]+slider/2, ys[3]+option_bar_text_offset);
     fill((int(map(xs[4], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[4], indention, indention+option_bar_length- slider, 255, 0))), 0);
@@ -222,32 +229,66 @@ void draw() {
     text(p2_score, width/2 + 20, fontSize + 20);
     //Creation of the game ball/s
     for (int i = 0; i < game_balls; i++) {
+      check_collisions(b[i]);
       b[i].move();
       b[i].display();
+      
     }
     //Reading the keypresses for paddle movement
-      if( keys[0]) 
+    if( keys[0]) 
     {  
-      y1 = constrain(y1 = y1 - paddle_speed, 0, height - paddleh);
+      player1.move_up();
     }
     if( keys[1]) 
     {
-      y1 = constrain(y1 = y1 + paddle_speed, 0, height - paddleh);
+      player1.move_down();
     }
       if( keys[2]) 
     {  
-      y2 = constrain(y2 = y2 - paddle_speed, 0, height - paddleh);
+      player2.move_up();
     }
     if( keys[3]) 
     {
-      y2 = constrain(y2 = y2 + paddle_speed, 0, height - paddleh);
+      player2.move_down();
     }
-    fill(255);
     //paddles
-    rect(x1, y1, paddlew, paddleh);
-    rect(x2, y2, paddlew, paddleh);
+    player1.display();
+    player2.display();
   }
   
+}
+void check_collisions(Ball ball){
+  //This grotesque boolean checks if the ball is bouncing off anything. I'm not really sure how to break this up into more manageable pieces.
+    /*if ((xpos > width-radius || xpos < radius) || (game == true && ((xpos <= x1 + paddlew + radius && (ypos > y1 && (ypos < paddleh + y1))) && xspeed <0 ) || game == true &&((xpos >= x2 - radius && (ypos > y2 && (ypos < paddleh + y2))) && xspeed >0)) ) {
+      xspeed = -xspeed;
+      //println(xspeed);
+    }*/
+    //Broke up that grotesque boolean. It's a little more manageable but still pretty ugly
+  if (game == true){
+      if((ball.xpos <= player1.xpos + paddlew + ball_radius) && (ball.ypos > player1.ypos) && (ball.ypos < paddleh + player1.ypos) && (ball.xspeed <0 ))
+        ball.reverse_x_speed();
+      if((ball.xpos >= player2.xpos - ball_radius) && (ball.ypos > player2.ypos) && (ball.ypos < paddleh + player2.ypos) && (ball.xspeed >0))
+        ball.reverse_x_speed();
+    }
+    if(!game){
+      if(ball.xpos > width-ball_radius || ball.xpos < ball_radius)
+        ball.reverse_x_speed();
+    }
+    if (ball.ypos > height-ball_radius || ball.ypos < ball_radius) {
+       ball.reverse_y_speed();
+    }
+    //when the ball hits the wall, player 1 a point
+    if (ball.xpos >= width-ball_radius && game == true)
+    {
+      p1_score +=1;
+      ball.reset_ball();
+    }
+    //when the ball hits the wall, player 2 a point
+    if (ball.xpos <= ball.radius && game == true)
+    {
+      p2_score +=1;
+      ball.reset_ball();
+    }
 }
 void keyPressed() {
   if (key == ' ') {
