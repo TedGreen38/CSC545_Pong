@@ -5,7 +5,7 @@ class Ball {
   int start_speed;
   int radius, diameter;
   int currentTime = 0;
-  boolean scored = false;
+  boolean scored = false, reflectable = true;
   color c; 
   int bin[] = {-1, 1};
   Ball(int r) {
