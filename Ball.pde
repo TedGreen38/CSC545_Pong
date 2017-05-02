@@ -1,13 +1,19 @@
 //Basic ball class
 class Ball {
   int xpos, ypos;
-  int xspeed, yspeed;
-  int start_speed;
+  float xspeed, yspeed;
+  int start_speed = 1;
   int radius, diameter;
   int currentTime = 0;
-  boolean scored = false, reflectable = true;
+  float x_direction, y_direction;
+  //If there are multiple balls, we need to keep track of whether or not they were scored
+  boolean scored = false;
+  //The next 2 bools keep track of reflecting off paddles and the ceiling/ground
+  boolean reflectable = true;
+  boolean ceil_ground = true;
   color c; 
   int bin[] = {-1, 1};
+  
   Ball(int r) {
     //starting x and y positions
     xpos = width/2;
@@ -15,10 +21,11 @@ class Ball {
     //starting radius and diameter. These can be updated in the menu
     radius = r;
     diameter = radius*2;
-    //starting x/y speeds
-    xspeed = bin[int(random(0,2))];
-    yspeed = bin[int(random(0,2))];
-    start_speed = abs(xspeed);
+    //starting x/y speeds and directions
+    x_direction = bin[int(random(0,2))];
+    y_direction = bin[int(random(0,2))];
+    xspeed = x_direction;
+    yspeed = y_direction;
 
     int hu = int(random(0, 360));
     int sat = 100; //int(random(0, 101));
@@ -37,8 +44,8 @@ class Ball {
   
   //update start speed from the options menu
   void update_speed(int speed){
-    xspeed = speed;
-    yspeed = speed;
+    xspeed = speed*x_direction;
+    yspeed = speed*y_direction;
     start_speed = speed;
   }
   
@@ -58,21 +65,35 @@ class Ball {
   
   //start ball movement
   void start_ball(){
-    xspeed = bin[int(random(0,2))]*start_speed;
-    yspeed = bin[int(random(0,2))]*start_speed;
+    x_direction = bin[int(random(0,2))];
+    y_direction = bin[int(random(0,2))];
+    xspeed = x_direction*start_speed;
+    yspeed = y_direction*start_speed;
     currentTime = millis();
   }
   
   //reverse the xspeed when the ball hits a paddle
   void reverse_x_speed(){
+    x_direction = -x_direction;
     xspeed = -xspeed;
   }
   
   //reverse y speed when ball hits the ceiling or floor  
   void reverse_y_speed(){
+    y_direction = -y_direction;
     yspeed = -yspeed;
   }
   
+  //Give the ball a speed boost based on where it hit the paddle
+  void boost(int speed){
+    if (speed == 0){
+      //If the ball hits the center of the paddle, boost the xspeed, and reset the y speed
+      xspeed = ceil(sqrt(xspeed*xspeed+yspeed*yspeed))*x_direction;
+      yspeed = start_speed*y_direction;
+    } else {
+      yspeed += speed*y_direction/10.0;
+    }
+  }
   //display the ball
   void display() {
     if(!scored){

@@ -48,6 +48,7 @@ int m;
 int currentTime = 0;
 int bin[] = {-1, 1};
 int collision_check1 = 0, collision_check2 =0;
+int speed_boost = 0;
 
 void setup() {
   size(600, 400);
@@ -235,30 +236,58 @@ void draw() {
     text(p1_score, width/2 - 20, fontSize + 20);
     textAlign(LEFT);
     text(p2_score, width/2 + 20, fontSize + 20);
-    //Creation of the game ball/s
+    //Collision Checking of balls and paddles
     for (int i = 0; i < game_balls; i++) {
       collision_check1 = paddle_ball_collision(b[i], player1);
       collision_check2 =  paddle_ball_collision(b[i], player2);
       if(collision_check1 == 0 && collision_check2 == 0){
+        //set reflectable to true if it's not touching anything
         b[i].reflectable = true;
       }
-      if(b[i].reflectable == true){
-        if(collision_check1 > 0 || collision_check2 > 0){
+      if(b[i].reflectable){ 
+        //If the ball hit player1's paddle
+        if(collision_check1 > 0){
+          if(b[i].ypos >= player1.ypos+player1.pheight/2){
+            speed_boost = constrain(int(map(b[i].ypos, player1.ypos+player1.pheight/2, player1.ypos+player1.pheight, 0, 5)), 0, 5);
+          } else if (b[i].ypos <= player1.ypos+player1.pheight/2){
+            speed_boost = constrain(int(map(b[i].ypos, player1.ypos+player1.pheight/2, player1.ypos, 0, 5)), 0, 5);
+          }
+          b[i].boost(speed_boost);
           b[i].reflectable = false;
           b[i].reverse_x_speed();
-          if((collision_check1 == 2 || collision_check2 == 2) && b[i].yspeed > 0){
+          if(collision_check1 == 2 && b[i].yspeed < 0){
             //this if the ball hits the top corner and the ball is moving against the paddle
-              b[i].reverse_y_speed();
+            b[i].reverse_y_speed();
           }
-          if((collision_check1 == 3 || collision_check2 == 3) && b[i].yspeed < 0){
-            //this if the ball hits the bottom corner and the ball is moving against the paddle
-              b[i].reverse_y_speed();
+          if(collision_check1 == 3 && b[i].yspeed > 0) {
+            ////this if the ball hits the bottom corner and the ball is moving against the paddle
+            b[i].reverse_y_speed();
           }
         }
-      }
-    check_collisions(b[i]);
-    b[i].move();
-    b[i].display();  
+        //If the ball hit player2's paddle
+        else if(collision_check2 > 0){
+          if(b[i].ypos >= player2.ypos+player2.pheight/2){
+            speed_boost = constrain(int(map(b[i].ypos, player2.ypos+player2.pheight/2, player2.ypos+player2.pheight, 0, 5)), 0, 5);
+          } else if (b[i].ypos <= player2.ypos+player2.pheight/2){
+            speed_boost = constrain(int(map(b[i].ypos, player2.ypos+player2.pheight/2, player2.ypos, 0, 5)), 0, 5);
+          }
+          b[i].boost(speed_boost);
+          b[i].reflectable = false;
+          b[i].reverse_x_speed();
+          if(collision_check2 == 2 && b[i].yspeed < 0){
+            //this if the ball hits the top corner and the ball is moving against the paddle
+            b[i].reverse_y_speed();
+          }
+          if(collision_check2 == 3 && b[i].yspeed > 0) {
+            //this if the ball hits the bottom corner and the ball is moving against the paddle
+            b[i].reverse_y_speed();
+          }
+        }        
+      } 
+      //Speed update is done on check_collisions
+      check_collisions(b[i]);
+      b[i].move();
+      b[i].display();  
     }
     //Reading the keypresses for paddle movement
     if( keys[0]) player1.move_up();
@@ -268,28 +297,33 @@ void draw() {
     //paddles
     player1.display();
     player2.display();
-  }
-  //reset the game when we are out of balls
-  if(balls_left == 0){
-    balls_left = game_balls;
-    for (int i = 0; i < game_balls; i++) {
-      b[i].scored = false;
-      b[i].start_ball();
+    //reset the game when we are out of balls
+    if(balls_left == 0){
+      balls_left = game_balls;
+      for (int i = 0; i < game_balls; i++) {
+        b[i].scored = false;
+        b[i].start_ball();
+      }
     }
   }
-  
 }
+
+//Handle general collisions: top/bottom screen, and goals
 void check_collisions(Ball ball){
-    
-    //This is used for the menu balls
-    if(!game){
-      if(ball.xpos > width-ball_radius || ball.xpos < ball_radius)
-        ball.reverse_x_speed();
-    }
     //All balls should bouce off the ceiling and ground
-    if (ball.ypos > height-ball_radius || ball.ypos < ball_radius) {
-       ball.reverse_y_speed();
+    if ((ball.ypos > height-ball_radius || ball.ypos < ball_radius) && ball.ceil_ground) {
+      ball.ceil_ground = false;
+      ball.reverse_y_speed();
     }
+    else if (ball.ypos < height-ball_radius && ball.ypos > ball_radius){
+      ball.ceil_ground = true;
+    }
+  //This is used for the menu balls
+  if(!game){
+    if(ball.xpos > width-ball_radius || ball.xpos < ball_radius)
+      ball.reverse_x_speed();
+  }
+  else if(game){
     //when the ball hits the wall, player 1 a point
     if (ball.xpos >= width-ball_radius && game == true)
     {
@@ -306,31 +340,36 @@ void check_collisions(Ball ball){
       ball.scored = true;
       ball.reset_ball();
     }
+  }
 }
 
+/* Handle Paddle-Ball Collision logic
+  Checks to see if the paddle is colliding with the ball and returns a number
+*/
 int paddle_ball_collision(Ball ball,Paddle paddle){
-    float distX = abs(ball.xpos - paddle.xpos-paddle.pwidth/2);
-    float distY = abs(ball.ypos - paddle.ypos-paddle.pheight/2);
+  float distX = abs(ball.xpos - paddle.xpos-paddle.pwidth/2);
+  float distY = abs(ball.ypos - paddle.ypos-paddle.pheight/2);
+  //It's definitely not hitting the paddle here
+  if (distX > (paddle.pwidth/2 + ball.radius)) { return 0; }
+  if (distY > (paddle.pheight/2 + ball.radius)) { return 0; }
+  
+  //check if the ball is hitting the paddle
+  if (distX <= (paddle.pwidth/2)) { return 1; } 
+  if (distY <= (paddle.pheight/2)) { return 1; }
 
-    //It's definitely not hitting the paddle here
-    if (distX > (paddle.pwidth/2 + ball.radius)) { return 0; }
-    if (distY > (paddle.pheight/2 + ball.radius)) { return 0; }
-    
-    //check if the ball is hitting the paddle
-    if (distX <= (paddle.pwidth/2)) { return 1; } 
-    if (distY <= (paddle.pheight/2)) { return 1; }
-
-    float dx=distX-paddle.pwidth/2;
-    float dy=distY-paddle.pheight/2;
-    if(dx*dx+dy*dy<=(ball.radius*ball.radius)){
-      //ball is hitting the bottom side of the paddle
-      if(ball.ypos > paddle.ypos){
-        return 3;}
-      else { //ball hit the top side of the paddle
-        return 2;
-      }
+  float dx=distX-paddle.pwidth/2;
+  float dy=distY-paddle.pheight/2;
+  if(dx*dx+dy*dy<=(ball.radius*ball.radius)){
+    //ball is hitting the bottom side of the paddle
+    if(ball.ypos > paddle.ypos){
+      return 2;}
+    else { //ball hit the top side of the paddle
+      return 3;
     }
-    else {return 0;}
+  }
+  else {
+    return 0;
+  }
 }
 void keyPressed() {
   if (key == ' ') {
