@@ -92,7 +92,7 @@ class Ball {
   void boost(int speed){
     if (speed == 0){
       //If the ball hits the center of the paddle, boost the xspeed, and reset the y speed
-      xspeed = ceil(sqrt(xspeed*xspeed+yspeed*yspeed))*x_direction;
+      xspeed = sqrt(xspeed*xspeed+yspeed*yspeed)*x_direction;
       yspeed = y_start_speed*y_direction;
     } else {
       yspeed += speed*y_direction/5.0;
