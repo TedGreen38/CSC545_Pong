@@ -5,6 +5,7 @@ class Ball {
   int start_speed;
   int radius, diameter;
   int currentTime = 0;
+  boolean scored = false;
   color c; 
   int bin[] = {-1, 1};
   Ball(int r) {
@@ -47,13 +48,19 @@ class Ball {
     diameter = radius*2;
   }
   
-  //reset the ball to its beginning parameters
+  //reset the ball to the center and wait for the game to start parameters
   void reset_ball(){
      xpos = width/2;
      ypos = height/2;
-     xspeed = bin[int(random(0,2))]*start_speed;
-     yspeed = bin[int(random(0,2))]*start_speed;
-     currentTime = millis();
+     xspeed = 0;
+     yspeed = 0;
+  }
+  
+  //start ball movement
+  void start_ball(){
+    xspeed = bin[int(random(0,2))]*start_speed;
+    yspeed = bin[int(random(0,2))]*start_speed;
+    currentTime = millis();
   }
   
   //reverse the xspeed when the ball hits a paddle
@@ -68,7 +75,9 @@ class Ball {
   
   //display the ball
   void display() {
-    fill(c);
-    ellipse(xpos, ypos, diameter, diameter);
+    if(!scored){
+      fill(c);
+      ellipse(xpos, ypos, diameter, diameter);
+    }
   }
 }

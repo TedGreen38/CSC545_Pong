@@ -1,6 +1,7 @@
 int window_width = 600;
 int window_height = 400;
 int game_balls = 1;//game balls
+int balls_left = game_balls;
 int max_balls = 10;//start menu balls visual
 Ball[] b = new Ball[max_balls];
 Ball[] b2 = new Ball[max_balls];
@@ -58,10 +59,10 @@ void setup() {
   textFont(f);
   
   // two sets of balls, one for the game balls and one for start menu graphics
-  for (int i = 0; i < game_balls; i++) {
+  for (int i = 0; i < max_balls; i++) {
     b2[i] = new Ball(ball_radius);
   }
-  for (int i = 0; i < max_balls; i++) {
+  for (int i = 0; i < game_balls; i++) {
     b[i] = new Ball(ball_radius);
   }
   background(0);
@@ -159,6 +160,10 @@ void draw() {
     if(mousePressed && (mouseButton == LEFT) && mpr[3] == true ) {
        xs[3] = constrain(xs[3] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
       game_balls = int(map(xs[3], indention, indention+option_bar_length- slider, 1, 10));
+      balls_left = game_balls;
+      for (int i = 0; i < game_balls; i++) {
+        b[i] = new Ball(ball_radius);
+      }
     }
     if(mousePressed && (mouseButton == LEFT) && mpr[4] == true ) {
        xs[4] = constrain(xs[4] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
@@ -255,6 +260,12 @@ void draw() {
     player1.display();
     player2.display();
   }
+  if(balls_left == 0){
+    for (int i = 0; i < game_balls; i++) {
+      b[i].scored = false;
+      b[i].reset_ball();
+    }
+  }
   
 }
 void check_collisions(Ball ball){
@@ -280,14 +291,16 @@ void check_collisions(Ball ball){
     //when the ball hits the wall, player 1 a point
     if (ball.xpos >= width-ball_radius && game == true)
     {
+      balls_left -= 1;
       p1_score +=1;
-      ball.reset_ball();
+      ball.scored = true;
     }
     //when the ball hits the wall, player 2 a point
     if (ball.xpos <= ball.radius && game == true)
     {
+      balls_left -= 1;
       p2_score +=1;
-      ball.reset_ball();
+      ball.scored = true;
     }
 }
 void keyPressed() {
