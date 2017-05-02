@@ -1,8 +1,9 @@
 //Basic ball class
 class Ball {
-  int xpos, ypos;
+  float xpos, ypos;
   float xspeed, yspeed;
-  int start_speed = 1;
+  int x_start_speed = 1;
+  float y_start_speed = random(0,2);
   int radius, diameter;
   int currentTime = 0;
   float x_direction, y_direction;
@@ -24,9 +25,8 @@ class Ball {
     //starting x/y speeds and directions
     x_direction = bin[int(random(0,2))];
     y_direction = bin[int(random(0,2))];
-    xspeed = x_direction;
-    yspeed = y_direction;
-
+    xspeed = x_direction*x_start_speed;
+    yspeed = y_direction*y_start_speed;
     int hu = int(random(0, 360));
     int sat = 100; //int(random(0, 101));
     int br = 100; //int(random(0, 101));
@@ -39,6 +39,9 @@ class Ball {
     if (millis()-1500 > currentTime){
       xpos += xspeed;
       ypos += yspeed;
+      //if (ypos > height-ball_radius || ypos < ball_radius) {
+      //  ypos -= yspeed;
+      //}
     }
   }
   
@@ -46,7 +49,7 @@ class Ball {
   void update_speed(int speed){
     xspeed = speed*x_direction;
     yspeed = speed*y_direction;
-    start_speed = speed;
+    x_start_speed = speed;
   }
   
   //update the radius from the options menu
@@ -65,11 +68,12 @@ class Ball {
   
   //start ball movement
   void start_ball(){
+    currentTime = millis();
     x_direction = bin[int(random(0,2))];
     y_direction = bin[int(random(0,2))];
-    xspeed = x_direction*start_speed;
-    yspeed = y_direction*start_speed;
-    currentTime = millis();
+    y_start_speed = random(0,2);
+    xspeed = x_direction*x_start_speed;
+    yspeed = y_direction*y_start_speed;
   }
   
   //reverse the xspeed when the ball hits a paddle
@@ -81,7 +85,7 @@ class Ball {
   //reverse y speed when ball hits the ceiling or floor  
   void reverse_y_speed(){
     y_direction = -y_direction;
-    yspeed = -yspeed;
+    yspeed = -yspeed;   
   }
   
   //Give the ball a speed boost based on where it hit the paddle
@@ -89,11 +93,13 @@ class Ball {
     if (speed == 0){
       //If the ball hits the center of the paddle, boost the xspeed, and reset the y speed
       xspeed = ceil(sqrt(xspeed*xspeed+yspeed*yspeed))*x_direction;
-      yspeed = start_speed*y_direction;
+      yspeed = y_start_speed*y_direction;
     } else {
-      yspeed += speed*y_direction/10.0;
+      yspeed += speed*y_direction/5.0;
+      constrain(yspeed, 0, 20);
     }
   }
+  
   //display the ball
   void display() {
     if(!scored){

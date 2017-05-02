@@ -45,8 +45,8 @@ boolean game = false;
 boolean[] mpr = {false, false, false, false, false, false};//Paddle control flags
 boolean[] keys = {false, false, false, false}; //Keys to move to paddles
 int m;
-int currentTime = 0;
 int bin[] = {-1, 1};
+//paddle-ball collision logic variables
 int collision_check1 = 0, collision_check2 =0;
 int speed_boost = 0;
 
@@ -162,7 +162,6 @@ void draw() {
     if(mousePressed && (mouseButton == LEFT) && mpr[3] == true ) {
        xs[3] = constrain(xs[3] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
       game_balls = int(map(xs[3], indention, indention+option_bar_length- slider, 1, 10));
-      balls_left = game_balls;
       for (int i = 0; i < game_balls; i++) {
         b[i] = new Ball(ball_radius);
         b[i].update_speed(ball_speed);
@@ -311,7 +310,7 @@ void draw() {
 //Handle general collisions: top/bottom screen, and goals
 void check_collisions(Ball ball){
     //All balls should bouce off the ceiling and ground
-    if ((ball.ypos > height-ball_radius || ball.ypos < ball_radius) && ball.ceil_ground) {
+    if ((ball.ypos >= height-ball_radius || ball.ypos <= ball_radius) && ball.ceil_ground) {
       ball.ceil_ground = false;
       ball.reverse_y_speed();
     }
@@ -443,6 +442,12 @@ void mousePressed() {
         options = false;
         p1_score = 0;
         p2_score = 0;
+        balls_left = game_balls;
+        for (int i = 0; i < game_balls; i++) {
+          b[i].scored = false;
+          b[i].reset_ball();
+          b[i].start_ball();
+      }
     }
     if((mouseButton == LEFT) && pmouseX>xs[0] && pmouseX<xs[0]+option_bar_length && pmouseY>ys[0] && pmouseY<ys[0]+option_bar_height) {
       mpr[0] = true;
@@ -471,6 +476,12 @@ void mousePressed() {
       options = false;
       p1_score = 0;
       p2_score = 0;
+      balls_left = game_balls;
+      for (int i = 0; i < game_balls; i++) {
+          b[i].scored = false;
+          b[i].reset_ball();
+          b[i].start_ball();
+      }
     }
     if((mouseButton == LEFT) && pmouseX>3*width/4- textWidth(options_string)/2 && pmouseX<3*width/4+textWidth(options_string)/2 && pmouseY>3*height/4 - option_bar_height && pmouseY<3*height/4+option_bar_height/2) {
       game = false;
