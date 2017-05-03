@@ -22,11 +22,6 @@ class Ball {
     //starting radius and diameter. These can be updated in the menu
     radius = r;
     diameter = radius*2;
-    //starting x/y speeds and directions
-    x_direction = bin[int(random(0,2))];
-    y_direction = bin[int(random(0,2))];
-    xspeed = x_direction*x_start_speed;
-    yspeed = y_direction*y_start_speed;
     int hu = int(random(0, 360));
     int sat = 100; //int(random(0, 101));
     int br = 100; //int(random(0, 101));
@@ -47,8 +42,6 @@ class Ball {
   
   //update start speed from the options menu
   void update_speed(int speed){
-    xspeed = speed*x_direction;
-    yspeed = speed*y_direction;
     x_start_speed = speed;
   }
   
@@ -78,8 +71,9 @@ class Ball {
   
   //reverse the xspeed when the ball hits a paddle
   void reverse_x_speed(){
-    x_direction = -x_direction;
     xspeed = -xspeed;
+    x_direction = -x_direction;
+    
   }
   
   //reverse y speed when ball hits the ceiling or floor  
@@ -96,7 +90,7 @@ class Ball {
       yspeed = y_start_speed*y_direction;
     } else {
       yspeed += speed*y_direction/5.0;
-      constrain(yspeed, 0, 20);
+      //constrain(yspeed, 0, 20);
     }
   }
   
