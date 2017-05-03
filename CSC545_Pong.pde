@@ -1,24 +1,26 @@
-int nballs = 1;//game balls
-int nballs2 = 30;//start menu balls visual
-Ball[] b = new Ball[nballs2];
-Ball[] b2 = new Ball[nballs2];
+int window_width = 600;
+int window_height = 400;
+int game_balls = 1;//game balls
+int balls_left = game_balls;
+int max_balls = 10;//start menu balls visual
+Ball[] b = new Ball[max_balls];
+Ball[] b2 = new Ball[max_balls];
 boolean frozen = false;  //Controls freeze
-//Paddle start location
-int x1 = 20;
-int y1 = 20;
-int x2 = width - 20;
-int y2 = y1;
 //Here are the variable for game options starting values.
 int paddlew = 10;
 int paddleh = 150;
 int paddle_speed = 10;
 int p1_score = 0;
 int p2_score = 0;
-int xspeed = 1;
-int yspeed = 1;
-int w = 50;
-int h = 50;
+int ball_speed = 1;
+int ball_radius = 50;
 int winning = 10;
+//Paddle variables 
+int paddle1_start_x = 20;
+int paddle2_start_x = window_width - 20-paddlew;
+int paddles_start_y = 20;
+Paddle player1 = new Paddle(paddle1_start_x, paddles_start_y, paddlew, paddleh);
+Paddle player2 = new Paddle(paddle2_start_x, paddles_start_y, paddlew, paddleh);
 //Variables for text
 PFont f, f2, f3;
 int fontSize = 36;
@@ -35,27 +37,23 @@ int[] xs = {indention, indention, indention, indention, indention, indention};
 int[] ys = {100, 140, 180, 220, 260, 300};
 int option_bar_length = 300;
 int option_bar_height = 20;
+int option_bar_text_offset = option_bar_height - 2;
 //Booleans for States
 boolean options = false;
 boolean start = true;
 boolean game = false;
 boolean[] mpr = {false, false, false, false, false, false};//Paddle control flags
-boolean[] keys;
+boolean[] keys = {false, false, false, false}; //Keys to move to paddles
 int m;
-int currentTime = 0;
-int bin[] = {-1, 1};
+//paddle-ball collision logic variables
+int collision_check1 = 0, collision_check2 =0;
+int speed_boost = 0;
 
 void setup() {
   size(600, 400);
-  x2 = width - x1 - paddlew;
   //colorMode(HSB, 360, 100, 100);
+  frameRate(30);
   
-  //Keys to move to paddles
-  keys=new boolean[4];
-  keys[0]=false;
-  keys[1]=false;
-  keys[2]=false;
-  keys[3]=false;
   //Various fonts
   f = createFont("Arial", fontSize);
   f2 = createFont("Arial", option_bar_height);
@@ -63,11 +61,11 @@ void setup() {
   textFont(f);
   
   // two sets of balls, one for the game balls and one for start menu graphics
-  for (int i = 0; i < nballs; i++) {
-    b2[i] = new Ball();
+  for (int i = 0; i < max_balls; i++) {
+    b2[i] = new Ball(ball_radius);
   }
-  for (int i = 0; i < nballs2; i++) {
-    b[i] = new Ball();
+  for (int i = 0; i < game_balls; i++) {
+    b[i] = new Ball(ball_radius);
   }
   background(0);
 }
@@ -83,11 +81,11 @@ void draw() {
     start = true;
     options = false;
   }
-  //Start Screen
+  //=======================================================Start Screen============================================================
   if (start == true) {
     background(0);
     //Was Trying to make the start screen more interesting by having a bunch of balls flying around, couldnt get implemented
-    //for (int i = 0; i < nballs2; i++) {
+    //for (int i = 0; i < max_balls; i++) {
     //  b[i].move();
     //  b[i].display();  
     //}
@@ -116,7 +114,8 @@ void draw() {
     text(options_string, 3*width/4, 3*height/4);
     
   }
-  //Options Menu
+  
+  //===================================================Options Menu==========================================================
   else if (options == true) {
     textFont(f);
     background(0);
@@ -144,74 +143,89 @@ void draw() {
     if(mousePressed && (mouseButton == LEFT) && mpr[0] == true ) {
        xs[0] = constrain(xs[0] + mouseX-pmouseX, indention, indention+option_bar_length - slider);
       paddle_speed = int(map(xs[0], indention, indention+option_bar_length - slider, 10, 50));
+      player1.update_speed(paddle_speed);
+      player2.update_speed(paddle_speed);
     }
     if(mousePressed && (mouseButton == LEFT) && mpr[1] == true ) {
-       xs[1] = constrain(xs[1] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
+      xs[1] = constrain(xs[1] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
       paddleh = int(map(xs[1], indention, indention+option_bar_length- slider, 150, 50));
+      player1.update_length(paddleh);
+      player2.update_length(paddleh);
     }
     if(mousePressed && (mouseButton == LEFT) && mpr[2] == true ) {
-       xs[2] = constrain(xs[2] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
-      xspeed = bin[int(random(0,2))]*int(map(xs[2], indention, indention+option_bar_length- slider, 1, 10));
-      yspeed = bin[int(random(0,2))]*int(map(xs[2], indention, indention+option_bar_length- slider, 1, 10));
+      xs[2] = constrain(xs[2] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
+      ball_speed = int(map(xs[2], indention, indention+option_bar_length- slider, 1, 10));
+      for (int i = 0; i < game_balls; i++) {
+        b[i].update_speed(ball_speed);
+      }
     }
     if(mousePressed && (mouseButton == LEFT) && mpr[3] == true ) {
        xs[3] = constrain(xs[3] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
-      nballs = int(map(xs[3], indention, indention+option_bar_length- slider, 1, 10));
+      game_balls = int(map(xs[3], indention, indention+option_bar_length- slider, 1, 10));
+      for (int i = 0; i < game_balls; i++) {
+        b[i] = new Ball(ball_radius);
+        b[i].update_speed(ball_speed);
+        b[i].update_radius(ball_radius);
+      }
     }
     if(mousePressed && (mouseButton == LEFT) && mpr[4] == true ) {
        xs[4] = constrain(xs[4] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
-      w = int(map(xs[4], indention, indention+option_bar_length- slider, 50, 10));
-      h = w;
+      ball_radius = int(map(xs[4], indention, indention+option_bar_length- slider, 50, 10));
+      for (int i = 0; i < game_balls; i++) {
+        b[i].update_radius(ball_radius);
+      }
     }
     if(mousePressed && (mouseButton == LEFT) && mpr[5] == true ) {
        xs[5] = constrain(xs[5] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
       m = int(map(xs[5], indention, indention+option_bar_length- slider, 120, 500));
     }
+    
     //Here are all the text elements to go along with the options sliders
     textFont(f2);
     fill(0);
-    textAlign(LEFT);
+    textAlign(CENTER);
     stroke(0);
     strokeWeight(2);
     fill((int(map(xs[0], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[0], indention, indention+option_bar_length- slider, 255, 0))), 0);
-    text(paddle_speed, xs[0], ys[0]+option_bar_height);
+    text(paddle_speed, xs[0]+slider/2, ys[0]+option_bar_text_offset);
     fill((int(map(xs[1], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[1], indention, indention+option_bar_length- slider, 255, 0))), 0);
-    text(paddleh, xs[1], ys[1]+option_bar_height);
+    text(paddleh, xs[1]+slider/2, ys[1]+option_bar_text_offset);
     fill((int(map(xs[2], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[2], indention, indention+option_bar_length- slider, 255, 0))), 0);
-    text(abs(xspeed), xs[2], ys[2]+option_bar_height);
+    text(abs(ball_speed), xs[2]+slider/2, ys[2]+option_bar_text_offset);
     fill((int(map(xs[3], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[3], indention, indention+option_bar_length- slider, 255, 0))), 0);
-    text(nballs, xs[3], ys[3]+option_bar_height);
+    text(game_balls, xs[3]+slider/2, ys[3]+option_bar_text_offset);
     fill((int(map(xs[4], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[4], indention, indention+option_bar_length- slider, 255, 0))), 0);
-    text(w, xs[4], ys[4]+option_bar_height);
+    text(ball_radius, xs[4]+slider/2, ys[4]+option_bar_text_offset);
     fill((int(map(xs[5], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[5], indention, indention+option_bar_length- slider, 255, 0))), 0);
-    text(options_string, xs[5], ys[5]+option_bar_height);
+    text(options_string, xs[5]+slider/2, ys[5]+option_bar_text_offset);
     
+    //  Options Text
+    textAlign(LEFT);
     fill(255);
-    text(paddle_speed_string, 20, ys[0]+option_bar_height);
-    text(paddle_length_string, 20, ys[1]+option_bar_height);
-    text(ball_speed_string, 20, ys[2]+option_bar_height);
-    text("Number of Balls", 20, ys[3]+option_bar_height);
-    text("Ball Size", 20, ys[4]+option_bar_height);
+    text(paddle_speed_string, 20, ys[0]+option_bar_text_offset);
+    text(paddle_length_string, 20, ys[1]+option_bar_text_offset);
+    text(ball_speed_string, 20, ys[2]+option_bar_text_offset);
+    text("Number of Balls", 20, ys[3]+option_bar_text_offset);
+    text("Ball Size", 20, ys[4]+option_bar_text_offset);
     
-    
-
+    //  Hard/Max values to the right of bar
     fill(255, 0, 0);
-    text(50, indention+option_bar_length +5, ys[0]+option_bar_height);
-    text(50, indention+option_bar_length +5, ys[1]+option_bar_height);
-    text(10, indention+option_bar_length +5, ys[2]+option_bar_height);
-    text(10, indention+option_bar_length +5, ys[3]+option_bar_height);
-    text(10, indention+option_bar_length +5, ys[4]+option_bar_height);
+    text(50, indention+option_bar_length +5, ys[0]+option_bar_text_offset);
+    text(50, indention+option_bar_length +5, ys[1]+option_bar_text_offset);
+    text(10, indention+option_bar_length +5, ys[2]+option_bar_text_offset);
+    text(10, indention+option_bar_length +5, ys[3]+option_bar_text_offset);
+    text(10, indention+option_bar_length +5, ys[4]+option_bar_text_offset);
     
-    
+    //  Min/Easy Values to the left of bar
     textAlign(RIGHT);
     fill(0, 255, 0);
-    text(10, indention-5, ys[0]+option_bar_height);
-    text(150, indention-5, ys[1]+option_bar_height);
-    text(1, indention-5, ys[2]+option_bar_height);
-    text(1, indention-5, ys[3]+option_bar_height);
-    text(50, indention-5, ys[4]+option_bar_height);
+    text(10, indention-5, ys[0]+option_bar_text_offset);
+    text(150, indention-5, ys[1]+option_bar_text_offset);
+    text(1, indention-5, ys[2]+option_bar_text_offset);
+    text(1, indention-5, ys[3]+option_bar_text_offset);
+    text(50, indention-5, ys[4]+option_bar_text_offset);
   }
-  //Game state
+  //================================================Game state=================================================
   else if (game == true){
   
     background(0);
@@ -221,34 +235,140 @@ void draw() {
     text(p1_score, width/2 - 20, fontSize + 20);
     textAlign(LEFT);
     text(p2_score, width/2 + 20, fontSize + 20);
-    //Creation of the game ball/s
-    for (int i = 0; i < nballs; i++) {
+    //Collision Checking of balls and paddles
+    for (int i = 0; i < game_balls; i++) {
+      collision_check1 = paddle_ball_collision(b[i], player1);
+      collision_check2 =  paddle_ball_collision(b[i], player2);
+      if(collision_check1 == 0 && collision_check2 == 0){
+        //set reflectable to true if it's not touching anything
+        b[i].reflectable = true;
+      }
+      if(b[i].reflectable){ 
+        //If the ball hit player1's paddle
+        if(collision_check1 > 0){
+          b[i].reflectable = false;
+          b[i].reverse_x_speed();
+          if(b[i].ypos >= player1.ypos+player1.pheight/2){
+            speed_boost = constrain(int(map(b[i].ypos, player1.ypos+player1.pheight/2, player1.ypos+player1.pheight, 0, 5)), 0, 5);
+          } else if (b[i].ypos <= player1.ypos+player1.pheight/2){
+            speed_boost = constrain(int(map(b[i].ypos, player1.ypos+player1.pheight/2, player1.ypos, 0, 5)), 0, 5);
+          }
+          b[i].boost(speed_boost);
+          if(collision_check1 == 2 && b[i].yspeed < 0){
+            //this if the ball hits the top corner and the ball is moving against the paddle
+            b[i].reverse_y_speed();
+          }
+          if(collision_check1 == 3 && b[i].yspeed > 0) {
+            ////this if the ball hits the bottom corner and the ball is moving against the paddle
+            b[i].reverse_y_speed();
+          }
+        }
+        //If the ball hit player2's paddle
+        else if(collision_check2 > 0){
+          b[i].reflectable = false;
+          b[i].reverse_x_speed();
+          if(b[i].ypos >= player2.ypos+player2.pheight/2){
+            speed_boost = constrain(int(map(b[i].ypos, player2.ypos+player2.pheight/2, player2.ypos+player2.pheight, 0, 5)), 0, 5);
+          } else if (b[i].ypos <= player2.ypos+player2.pheight/2){
+            speed_boost = constrain(int(map(b[i].ypos, player2.ypos+player2.pheight/2, player2.ypos, 0, 5)), 0, 5);
+          }
+          b[i].boost(speed_boost);
+          if(collision_check2 == 2 && b[i].yspeed < 0){
+            //this if the ball hits the top corner and the ball is moving against the paddle
+            b[i].reverse_y_speed();
+          }
+          if(collision_check2 == 3 && b[i].yspeed > 0) {
+            //this if the ball hits the bottom corner and the ball is moving against the paddle
+            b[i].reverse_y_speed();
+          }
+        }        
+      } 
+      //Speed update is done on check_collisions
+      check_collisions(b[i]);
       b[i].move();
-      b[i].display();
+      b[i].display();  
     }
     //Reading the keypresses for paddle movement
-      if( keys[0]) 
-    {  
-      y1 = constrain(y1 = y1 - paddle_speed, 0, height - paddleh);
-    }
-    if( keys[1]) 
-    {
-      y1 = constrain(y1 = y1 + paddle_speed, 0, height - paddleh);
-    }
-      if( keys[2]) 
-    {  
-      y2 = constrain(y2 = y2 - paddle_speed, 0, height - paddleh);
-    }
-    if( keys[3]) 
-    {
-      y2 = constrain(y2 = y2 + paddle_speed, 0, height - paddleh);
-    }
-    fill(255);
+    if( keys[0]) player1.move_up();
+    if( keys[1]) player1.move_down();
+    if( keys[2]) player2.move_up();
+    if( keys[3]) player2.move_down();
     //paddles
-    rect(x1, y1, paddlew, paddleh);
-    rect(x2, y2, paddlew, paddleh);
+    player1.display();
+    player2.display();
+    //reset the game when we are out of balls
+    if(balls_left == 0){
+      balls_left = game_balls;
+      for (int i = 0; i < game_balls; i++) {
+        b[i].scored = false;
+        b[i].start_ball();
+      }
+    }
   }
+}
+
+//Handle general collisions: top/bottom screen, and goals
+void check_collisions(Ball ball){
+    //All balls should bouce off the ceiling and ground
+    if ((ball.ypos >= height-ball_radius || ball.ypos <= ball_radius) && ball.ceil_ground) {
+      ball.ceil_ground = false;
+      ball.reverse_y_speed();
+    }
+    else if (ball.ypos < height-ball_radius && ball.ypos > ball_radius){
+      ball.ceil_ground = true;
+    }
+  //This is used for the menu balls
+  if(!game){
+    if(ball.xpos > width-ball_radius || ball.xpos < ball_radius)
+      ball.reverse_x_speed();
+  }
+  else if(game){
+    //when the ball hits the wall, player 1 a point
+    if (ball.xpos >= width-ball_radius && game == true)
+    {
+      balls_left -= 1;
+      p1_score +=1;
+      ball.scored = true;
+      ball.reset_ball();
+    }
+    //when the ball hits the wall, player 2 a point
+    if (ball.xpos <= ball.radius && game == true)
+    {
+      balls_left -= 1;
+      p2_score +=1;
+      ball.scored = true;
+      ball.reset_ball();
+    }
+  }
+}
+
+/* Handle Paddle-Ball Collision logic
+  Checks to see if the paddle is colliding with the ball and returns a number
+*/
+int paddle_ball_collision(Ball ball,Paddle paddle){
+  float distX = abs(ball.xpos - paddle.xpos-paddle.pwidth/2);
+  float distY = abs(ball.ypos - paddle.ypos-paddle.pheight/2);
+  //It's definitely not hitting the paddle here
+  if (distX > (paddle.pwidth/2 + ball.radius)) { return 0; }
+  if (distY > (paddle.pheight/2 + ball.radius)) { return 0; }
   
+  //check if the ball is hitting the paddle
+  if (distX <= (paddle.pwidth/2)) { return 1; } 
+  if (distY <= (paddle.pheight/2)) { return 1; }
+
+  float dx=distX-paddle.pwidth/2;
+  float dy=distY-paddle.pheight/2;
+  if((dx*dx+dy*dy)<=(ball.radius*ball.radius)){
+    //ball is hitting the bottom side of the paddle
+    if(ball.ypos > paddle.ypos){
+      return 2;}
+    else { //ball hit the top side of the paddle
+      return 3;
+    }
+  }
+  else {
+    return 0;
+  }
 }
 void keyPressed() {
   if (key == ' ') {
@@ -263,17 +383,19 @@ void keyPressed() {
     background(0);
   }
   //Keypresses for paddle movement
-  if(key == 'q' || key == 'Q')
+  if(key == 'w' || key == 'W')
     keys[0]=true;
-  if(key == 'a' || key == 'A')
+  if(key == 's' || key == 'S')
     keys[1]=true;
-  if(key == 'o' || key == 'O')
-    keys[2]=true;
-  if(key == 'l' || key == 'L')
-    keys[3]=true;
+  if(key == CODED){
+    if(keyCode == UP)
+      keys[2]=true;
+    if(keyCode == DOWN)
+      keys[3]=true;
+  }
     
   //Keypress to change states, was planning to remove, was only using for troubleshooting
-  if(key == 'g' || key == 'G'){
+  /*if(key == 'g' || key == 'G'){
     game = true;
     start = false;
     options = false;
@@ -286,26 +408,28 @@ void keyPressed() {
     options = false;
     p1_score = 0;
     p2_score = 0;
-  }
+  }*/
   if(key == 'f' || key == 'F'){
     options = true;
     start = false;
     game = false;
     p1_score = 0;
     p2_score = 0;
-  }
+  }//*/
 }
 void keyReleased()
 {
   //for paddle movement
-  if(key == 'q' || key == 'Q')
+  if(key == 'w' || key == 'W')
     keys[0]=false;
-  if(key == 'a' || key == 'A')
+  if(key == 's' || key == 'S')
     keys[1]=false;
-  if(key == 'o' || key == 'O')
-    keys[2]=false;
-  if(key == 'l' || key == 'L')
-    keys[3]=false;
+  if(key == CODED){
+    if(keyCode == UP)
+      keys[2]=false;
+    if(keyCode == DOWN)
+      keys[3]=false;
+  }
 }
 void mousePressed() {
   //This is where i implemented clicking of buttons
@@ -318,6 +442,12 @@ void mousePressed() {
         options = false;
         p1_score = 0;
         p2_score = 0;
+        balls_left = game_balls;
+        for (int i = 0; i < game_balls; i++) {
+          b[i].scored = false;
+          b[i].reset_ball();
+          b[i].start_ball();
+      }
     }
     if((mouseButton == LEFT) && pmouseX>xs[0] && pmouseX<xs[0]+option_bar_length && pmouseY>ys[0] && pmouseY<ys[0]+option_bar_height) {
       mpr[0] = true;
@@ -346,6 +476,12 @@ void mousePressed() {
       options = false;
       p1_score = 0;
       p2_score = 0;
+      balls_left = game_balls;
+      for (int i = 0; i < game_balls; i++) {
+          b[i].scored = false;
+          b[i].reset_ball();
+          b[i].start_ball();
+      }
     }
     if((mouseButton == LEFT) && pmouseX>3*width/4- textWidth(options_string)/2 && pmouseX<3*width/4+textWidth(options_string)/2 && pmouseY>3*height/4 - option_bar_height && pmouseY<3*height/4+option_bar_height/2) {
       game = false;
