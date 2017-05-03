@@ -45,7 +45,6 @@ boolean game = false;
 boolean[] mpr = {false, false, false, false, false, false};//Paddle control flags
 boolean[] keys = {false, false, false, false}; //Keys to move to paddles
 int m;
-int bin[] = {-1, 1};
 //paddle-ball collision logic variables
 int collision_check1 = 0, collision_check2 =0;
 int speed_boost = 0;
@@ -53,6 +52,7 @@ int speed_boost = 0;
 void setup() {
   size(600, 400);
   //colorMode(HSB, 360, 100, 100);
+  frameRate(30);
   
   //Various fonts
   f = createFont("Arial", fontSize);
@@ -154,7 +154,7 @@ void draw() {
     }
     if(mousePressed && (mouseButton == LEFT) && mpr[2] == true ) {
       xs[2] = constrain(xs[2] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
-      ball_speed = bin[int(random(0,2))]*int(map(xs[2], indention, indention+option_bar_length- slider, 1, 10));
+      ball_speed = int(map(xs[2], indention, indention+option_bar_length- slider, 1, 10));
       for (int i = 0; i < game_balls; i++) {
         b[i].update_speed(ball_speed);
       }
@@ -246,14 +246,14 @@ void draw() {
       if(b[i].reflectable){ 
         //If the ball hit player1's paddle
         if(collision_check1 > 0){
+          b[i].reflectable = false;
+          b[i].reverse_x_speed();
           if(b[i].ypos >= player1.ypos+player1.pheight/2){
             speed_boost = constrain(int(map(b[i].ypos, player1.ypos+player1.pheight/2, player1.ypos+player1.pheight, 0, 5)), 0, 5);
           } else if (b[i].ypos <= player1.ypos+player1.pheight/2){
             speed_boost = constrain(int(map(b[i].ypos, player1.ypos+player1.pheight/2, player1.ypos, 0, 5)), 0, 5);
           }
           b[i].boost(speed_boost);
-          b[i].reflectable = false;
-          b[i].reverse_x_speed();
           if(collision_check1 == 2 && b[i].yspeed < 0){
             //this if the ball hits the top corner and the ball is moving against the paddle
             b[i].reverse_y_speed();
@@ -265,14 +265,14 @@ void draw() {
         }
         //If the ball hit player2's paddle
         else if(collision_check2 > 0){
+          b[i].reflectable = false;
+          b[i].reverse_x_speed();
           if(b[i].ypos >= player2.ypos+player2.pheight/2){
             speed_boost = constrain(int(map(b[i].ypos, player2.ypos+player2.pheight/2, player2.ypos+player2.pheight, 0, 5)), 0, 5);
           } else if (b[i].ypos <= player2.ypos+player2.pheight/2){
             speed_boost = constrain(int(map(b[i].ypos, player2.ypos+player2.pheight/2, player2.ypos, 0, 5)), 0, 5);
           }
           b[i].boost(speed_boost);
-          b[i].reflectable = false;
-          b[i].reverse_x_speed();
           if(collision_check2 == 2 && b[i].yspeed < 0){
             //this if the ball hits the top corner and the ball is moving against the paddle
             b[i].reverse_y_speed();
@@ -358,7 +358,7 @@ int paddle_ball_collision(Ball ball,Paddle paddle){
 
   float dx=distX-paddle.pwidth/2;
   float dy=distY-paddle.pheight/2;
-  if(dx*dx+dy*dy<=(ball.radius*ball.radius)){
+  if((dx*dx+dy*dy)<=(ball.radius*ball.radius)){
     //ball is hitting the bottom side of the paddle
     if(ball.ypos > paddle.ypos){
       return 2;}
