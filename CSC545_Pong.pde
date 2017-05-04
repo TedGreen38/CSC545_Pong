@@ -6,6 +6,7 @@ int max_balls = 10;//start menu balls visual
 Ball[] b = new Ball[max_balls];
 Ball[] b2 = new Ball[max_balls];
 boolean frozen = false;  //Controls freeze
+
 //Here are the variable for game options starting values.
 int paddlew = 10;
 int paddleh = 150;
@@ -15,12 +16,14 @@ int p2_score = 0;
 int ball_speed = 1;
 int ball_radius = 50;
 int winning = 10;
+
 //Paddle variables 
 int paddle1_start_x = 20;
 int paddle2_start_x = window_width - 20-paddlew;
 int paddles_start_y = 20;
 Paddle player1 = new Paddle(paddle1_start_x, paddles_start_y, paddlew, paddleh);
 Paddle player2 = new Paddle(paddle2_start_x, paddles_start_y, paddlew, paddleh);
+
 //Variables for text
 PFont f, f2, f3;
 int fontSize = 36;
@@ -38,6 +41,7 @@ int[] ys = {100, 140, 180, 220, 260, 300};
 int option_bar_length = 300;
 int option_bar_height = 20;
 int option_bar_text_offset = option_bar_height - 2;
+
 //Booleans for States
 boolean options = false;
 boolean start = true;
@@ -45,12 +49,22 @@ boolean game = false;
 boolean[] mpr = {false, false, false, false, false, false};//Paddle control flags
 boolean[] keys = {false, false, false, false}; //Keys to move to paddles
 int m;
+
 //paddle-ball collision logic variables
 int collision_check1 = 0, collision_check2 =0;
 int speed_boost = 0;
 
+//powerup variables
+int randomType = 0; //variable to randomly change type creation
+boolean powerup = false;
+int leftBound = 0 + 65;
+int rightBound = window_width - 85;
+PowerUps currentPowerUp = new PowerUps(randomType, leftBound, 0);
+
 void setup() {
   size(600, 400);
+  surface.setResizable(true);
+  surface.setSize(window_width, window_height);
   //colorMode(HSB, 360, 100, 100);
   frameRate(30);
   
@@ -288,6 +302,24 @@ void draw() {
       b[i].move();
       b[i].display();  
     }
+    //Randomly generating powerups
+    if (powerup) {
+      currentPowerUp.display();
+      for (int i = 0; i < game_balls; i++) {
+        if (powerup_ball_collision(b[i], currentPowerUp)) {
+          
+        }
+      }
+    }
+    else {
+      int randomSpawn = (int) random(0, 300);
+      if (randomSpawn == 150) {
+        currentPowerUp = createPowerUp();
+        powerup = true;
+      }
+    }
+    //
+    
     //Reading the keypresses for paddle movement
     if( keys[0]) player1.move_up();
     if( keys[1]) player1.move_down();
@@ -345,7 +377,7 @@ void check_collisions(Ball ball){
 /* Handle Paddle-Ball Collision logic
   Checks to see if the paddle is colliding with the ball and returns a number
 */
-int paddle_ball_collision(Ball ball,Paddle paddle){
+int paddle_ball_collision(Ball ball, Paddle paddle){
   float distX = abs(ball.xpos - paddle.xpos-paddle.pwidth/2);
   float distY = abs(ball.ypos - paddle.ypos-paddle.pheight/2);
   //It's definitely not hitting the paddle here
@@ -370,6 +402,42 @@ int paddle_ball_collision(Ball ball,Paddle paddle){
     return 0;
   }
 }
+
+boolean powerup_ball_collision(Ball ball, PowerUps powerup) {
+  float distX = abs(ball.xpos - powerup.xpos-20/2);
+  float distY = abs(ball.ypos - powerup.ypos-20/2);
+  //It's definitely not hitting the paddle here
+  if (distX > (20/2 + ball.radius)) { return true; }
+  if (distY > (20/2 + ball.radius)) { return true; }
+  
+  //check if the ball is hitting the paddle
+  if (distX <= (20/2)) { return true; } 
+  if (distY <= (20/2)) { return true; }
+
+  float dx=distX-20/2;
+  float dy=distY-20/2;
+  if((dx*dx+dy*dy)<=(ball.radius*ball.radius)){
+    //ball is hitting the bottom side of the paddle
+    if(ball.ypos > powerup.ypos){
+      return true;
+    }
+    else { //ball hit the top side of the paddle
+      return true;
+    }
+  }
+  else {
+    return false;
+  }
+}
+
+//Returns a random powerup and a random position
+PowerUps createPowerUp() {
+  randomType = (int) random(0, 4);
+  int randomX = (int) random (leftBound, rightBound);
+  int randomY = (int) random (0, height - 20);
+  return new PowerUps(randomType, randomX, randomY);
+}
+
 void keyPressed() {
   if (key == ' ') {
     if (frozen) {
@@ -395,20 +463,20 @@ void keyPressed() {
   }
     
   //Keypress to change states, was planning to remove, was only using for troubleshooting
-  /*if(key == 'g' || key == 'G'){
+  if(key == 'g' || key == 'G'){
     game = true;
     start = false;
     options = false;
     p1_score = 0;
     p2_score = 0;
   }
-  if(key == 's' || key == 'S'){
+  if(key == 'h' || key == 'H'){
     start = true;
     game = false;
     options = false;
     p1_score = 0;
     p2_score = 0;
-  }*/
+  }
   if(key == 'f' || key == 'F'){
     options = true;
     start = false;
@@ -500,5 +568,4 @@ void mouseReleased() {
    mpr[4] = false;
    mpr[5] = false;
    mpr[0] = false;
-
 }
