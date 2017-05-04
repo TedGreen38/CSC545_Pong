@@ -307,13 +307,20 @@ void draw() {
       currentPowerUp.display();
       for (int i = 0; i < game_balls; i++) {
         if (powerup_ball_collision(b[i], currentPowerUp)) {
-          
+          int currentType = currentPowerUp.getType();
+          Paddle hinderedPaddle;
+          if (b[i].xspeed < 0) hinderedPaddle = player1;
+          else hinderedPaddle = player2;
+          if (currentType == 0) { //decrease paddle length
+            hinderedPaddle.update_length(hinderedPaddle.pheight - 10);
+          }
+          powerup = false;
         }
       }
     }
     else {
-      int randomSpawn = (int) random(0, 300);
-      if (randomSpawn == 150) {
+      int randomSpawn = (int) random(0, 500);
+      if (randomSpawn == 250) {
         currentPowerUp = createPowerUp();
         powerup = true;
       }
@@ -407,8 +414,8 @@ boolean powerup_ball_collision(Ball ball, PowerUps powerup) {
   float distX = abs(ball.xpos - powerup.xpos-20/2);
   float distY = abs(ball.ypos - powerup.ypos-20/2);
   //It's definitely not hitting the paddle here
-  if (distX > (20/2 + ball.radius)) { return true; }
-  if (distY > (20/2 + ball.radius)) { return true; }
+  if (distX > (20/2 + ball.radius)) { return false; }
+  if (distY > (20/2 + ball.radius)) { return false; }
   
   //check if the ball is hitting the paddle
   if (distX <= (20/2)) { return true; } 
@@ -417,13 +424,7 @@ boolean powerup_ball_collision(Ball ball, PowerUps powerup) {
   float dx=distX-20/2;
   float dy=distY-20/2;
   if((dx*dx+dy*dy)<=(ball.radius*ball.radius)){
-    //ball is hitting the bottom side of the paddle
-    if(ball.ypos > powerup.ypos){
-      return true;
-    }
-    else { //ball hit the top side of the paddle
-      return true;
-    }
+    return true;
   }
   else {
     return false;
@@ -432,7 +433,7 @@ boolean powerup_ball_collision(Ball ball, PowerUps powerup) {
 
 //Returns a random powerup and a random position
 PowerUps createPowerUp() {
-  randomType = (int) random(0, 4);
+  randomType = 0; //(int) random(0, 4);
   int randomX = (int) random (leftBound, rightBound);
   int randomY = (int) random (0, height - 20);
   return new PowerUps(randomType, randomX, randomY);
