@@ -6,6 +6,7 @@ int max_balls = 10;//start menu balls visual
 Ball[] b = new Ball[max_balls];
 Ball[] b2 = new Ball[max_balls];
 boolean frozen = false;  //Controls freeze
+
 //Here are the variable for game options starting values.
 int paddlew = 10;
 int paddleh = 150;
@@ -15,12 +16,14 @@ int p2_score = 0;
 int ball_speed = 1;
 int ball_radius = 50;
 int winning = 10;
+
 //Paddle variables 
 int paddle1_start_x = 20;
 int paddle2_start_x = window_width - 20-paddlew;
 int paddles_start_y = 20;
 Paddle player1 = new Paddle(paddle1_start_x, paddles_start_y, paddlew, paddleh);
 Paddle player2 = new Paddle(paddle2_start_x, paddles_start_y, paddlew, paddleh);
+
 //Variables for text
 PFont f, f2, f3;
 int fontSize = 36;
@@ -34,10 +37,11 @@ String pongchamp = "PongChamp";
 int indention = 220;
 int slider = 50;
 int[] xs = {indention, indention, indention, indention, indention, indention};
-int[] ys = {100, 140, 180, 220, 260, 300};
+int[] ys = {100, 140, 180, 220, 260};
 int option_bar_length = 300;
 int option_bar_height = 20;
 int option_bar_text_offset = option_bar_height - 2;
+
 //Booleans for States
 boolean options = false;
 boolean start = true;
@@ -45,14 +49,25 @@ boolean game = false;
 boolean[] mpr = {false, false, false, false, false, false};//Paddle control flags
 boolean[] keys = {false, false, false, false}; //Keys to move to paddles
 int m;
+
 //paddle-ball collision logic variables
 int collision_check1 = 0, collision_check2 =0;
 int speed_boost = 0;
 
+//powerup variables
+int randomType = 0; //variable to randomly change type creation
+boolean powerupsEnabled = true; //var for enabling/disabling powerups
+boolean powerup = false; //var for if a powerup is active
+int leftBound = 0 + 65;
+int rightBound = window_width - 85;
+PowerUps currentPowerUp = new PowerUps(randomType, leftBound, 0);
+
 void setup() {
   size(600, 400);
+  surface.setResizable(true);
+  surface.setSize(window_width, window_height);
   //colorMode(HSB, 360, 100, 100);
-  frameRate(30);
+  frameRate(60);
   
   //Various fonts
   f = createFont("Arial", fontSize);
@@ -84,6 +99,7 @@ void draw() {
   //=======================================================Start Screen============================================================
   if (start == true) {
     background(0);
+    stroke(0);
     //Was Trying to make the start screen more interesting by having a bunch of balls flying around, couldnt get implemented
     //for (int i = 0; i < max_balls; i++) {
     //  b[i].move();
@@ -135,6 +151,8 @@ void draw() {
       stroke(255);
       rect(indention, ys[i], option_bar_length, 20);
     }
+    
+    
     /*
     This next block of code is what takes the position of the slider and maps it to the appropriate variable it is to change.
     Its fairly easy to expand the options, just follow the trend of the existing ones.
@@ -175,10 +193,6 @@ void draw() {
         b[i].update_radius(ball_radius);
       }
     }
-    if(mousePressed && (mouseButton == LEFT) && mpr[5] == true ) {
-       xs[5] = constrain(xs[5] + mouseX-pmouseX, indention, indention+option_bar_length-slider);
-      m = int(map(xs[5], indention, indention+option_bar_length- slider, 120, 500));
-    }
     
     //Here are all the text elements to go along with the options sliders
     textFont(f2);
@@ -196,17 +210,32 @@ void draw() {
     text(game_balls, xs[3]+slider/2, ys[3]+option_bar_text_offset);
     fill((int(map(xs[4], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[4], indention, indention+option_bar_length- slider, 255, 0))), 0);
     text(ball_radius, xs[4]+slider/2, ys[4]+option_bar_text_offset);
-    fill((int(map(xs[5], indention, indention+option_bar_length- slider, 0, 255))), (int(map(xs[5], indention, indention+option_bar_length- slider, 255, 0))), 0);
-    text(options_string, xs[5]+slider/2, ys[5]+option_bar_text_offset);
     
-    //  Options Text
+    //Powerup button!
+    fill(255);
+    rect(xs[5], 300, 50, 20);
+    noFill();
+    stroke(255);
+    rect(indention, 300, 50, 20);
+    if (powerupsEnabled) {
+      fill(0, 255, 0);
+      text("Yes!", xs[5]+slider/2, 300+option_bar_text_offset);
+    }
+    else {
+      fill(255, 0, 0);
+      text("No!", xs[5]+slider/2, 300+option_bar_text_offset);
+    }
+    
+    // Options Text
     textAlign(LEFT);
+    stroke(0);
     fill(255);
     text(paddle_speed_string, 20, ys[0]+option_bar_text_offset);
     text(paddle_length_string, 20, ys[1]+option_bar_text_offset);
     text(ball_speed_string, 20, ys[2]+option_bar_text_offset);
     text("Number of Balls", 20, ys[3]+option_bar_text_offset);
     text("Ball Size", 20, ys[4]+option_bar_text_offset);
+    text("PowerUps?", 20, 300+option_bar_text_offset);
     
     //  Hard/Max values to the right of bar
     fill(255, 0, 0);
@@ -229,6 +258,7 @@ void draw() {
   else if (game == true){
   
     background(0);
+    stroke(255);
     fill(255);
     //Player Score
     textAlign(RIGHT);
@@ -288,6 +318,42 @@ void draw() {
       b[i].move();
       b[i].display();  
     }
+    //Randomly generating powerups
+    if (powerupsEnabled) {
+      if (powerup) {
+        currentPowerUp.display();
+        for (int i = 0; i < game_balls; i++) {
+          if (powerup_ball_collision(b[i], currentPowerUp)) {
+            int currentType = currentPowerUp.getType();
+            Paddle hinderedPaddle;
+            if (b[i].xspeed < 0) hinderedPaddle = player1;
+            else hinderedPaddle = player2;
+            if (currentType == 0) { //decrease paddle length
+              hinderedPaddle.update_length(hinderedPaddle.pheight - 10);
+            }
+            if (currentType == 1) { //increase ball speed
+              if (b[i].xspeed < 0) b[i].xspeed -= 2;
+              else b[i].xspeed += 2;
+            }
+            if (currentType == 2) { //decrease ball size
+              b[i].update_radius(b[i].radius - 5);  
+            }
+            if (currentType == 3) { //reverse speed
+            b[i].reverse_x_speed();
+            }
+            powerup = false;
+          }
+        }
+      }
+      else {
+        int randomSpawn = (int) random(0, 500);
+        if (randomSpawn == 250) {
+          currentPowerUp = createPowerUp();
+          powerup = true;
+        }
+      }
+    }
+    
     //Reading the keypresses for paddle movement
     if( keys[0]) player1.move_up();
     if( keys[1]) player1.move_down();
@@ -310,21 +376,21 @@ void draw() {
 //Handle general collisions: top/bottom screen, and goals
 void check_collisions(Ball ball){
     //All balls should bouce off the ceiling and ground
-    if ((ball.ypos >= height-ball_radius || ball.ypos <= ball_radius) && ball.ceil_ground) {
+    if ((ball.ypos >= height-ball.radius || ball.ypos <= ball.radius) && ball.ceil_ground) {
       ball.ceil_ground = false;
       ball.reverse_y_speed();
     }
-    else if (ball.ypos < height-ball_radius && ball.ypos > ball_radius){
+    else if (ball.ypos < height-ball.radius && ball.ypos > ball.radius){
       ball.ceil_ground = true;
     }
   //This is used for the menu balls
   if(!game){
-    if(ball.xpos > width-ball_radius || ball.xpos < ball_radius)
+    if(ball.xpos > width-ball.radius || ball.xpos < ball.radius)
       ball.reverse_x_speed();
   }
   else if(game){
     //when the ball hits the wall, player 1 a point
-    if (ball.xpos >= width-ball_radius && game == true)
+    if (ball.xpos >= width-ball.radius && game == true)
     {
       balls_left -= 1;
       p1_score +=1;
@@ -345,7 +411,7 @@ void check_collisions(Ball ball){
 /* Handle Paddle-Ball Collision logic
   Checks to see if the paddle is colliding with the ball and returns a number
 */
-int paddle_ball_collision(Ball ball,Paddle paddle){
+int paddle_ball_collision(Ball ball, Paddle paddle){
   float distX = abs(ball.xpos - paddle.xpos-paddle.pwidth/2);
   float distY = abs(ball.ypos - paddle.ypos-paddle.pheight/2);
   //It's definitely not hitting the paddle here
@@ -370,6 +436,36 @@ int paddle_ball_collision(Ball ball,Paddle paddle){
     return 0;
   }
 }
+
+boolean powerup_ball_collision(Ball ball, PowerUps powerup) {
+  float distX = abs(ball.xpos - powerup.xpos-20/2);
+  float distY = abs(ball.ypos - powerup.ypos-20/2);
+  //It's definitely not hitting the paddle here
+  if (distX > (20/2 + ball.radius)) { return false; }
+  if (distY > (20/2 + ball.radius)) { return false; }
+  
+  //check if the ball is hitting the paddle
+  if (distX <= (20/2)) { return true; } 
+  if (distY <= (20/2)) { return true; }
+
+  float dx=distX-20/2;
+  float dy=distY-20/2;
+  if((dx*dx+dy*dy)<=(ball.radius*ball.radius)){
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+//Returns a random powerup and a random position
+PowerUps createPowerUp() {
+  randomType = (int) random(0, 4);
+  int randomX = (int) random (leftBound, rightBound);
+  int randomY = (int) random (0, height - 20);
+  return new PowerUps(randomType, randomX, randomY);
+}
+
 void keyPressed() {
   if (key == ' ') {
     if (frozen) {
@@ -395,20 +491,20 @@ void keyPressed() {
   }
     
   //Keypress to change states, was planning to remove, was only using for troubleshooting
-  /*if(key == 'g' || key == 'G'){
+  if(key == 'g' || key == 'G'){
     game = true;
     start = false;
     options = false;
     p1_score = 0;
     p2_score = 0;
   }
-  if(key == 's' || key == 'S'){
+  if(key == 'h' || key == 'H'){
     start = true;
     game = false;
     options = false;
     p1_score = 0;
     p2_score = 0;
-  }*/
+  }
   if(key == 'f' || key == 'F'){
     options = true;
     start = false;
@@ -440,12 +536,15 @@ void mousePressed() {
         game = true;
         start = false;
         options = false;
+        player1.update_length(paddleh);
+        player2.update_length(paddleh);
         p1_score = 0;
         p2_score = 0;
         balls_left = game_balls;
         for (int i = 0; i < game_balls; i++) {
           b[i].scored = false;
           b[i].reset_ball();
+          b[i].update_radius(ball_radius);
           b[i].start_ball();
       }
     }
@@ -464,9 +563,15 @@ void mousePressed() {
     if((mouseButton == LEFT) && pmouseX>xs[4] && pmouseX<xs[4]+option_bar_length && pmouseY>ys[4] && pmouseY<ys[4]+option_bar_height) {
       mpr[4] = true;
     }
-    if((mouseButton == LEFT) && pmouseX>xs[5] && pmouseX<xs[5]+option_bar_length && pmouseY>ys[5] && pmouseY<ys[5]+option_bar_height) {
-      mpr[5] = true;
-  }
+    if((mouseButton == LEFT) && pmouseX>xs[5] && pmouseX<xs[5]+50 && pmouseY > 300 && pmouseY< 300 + 20) {
+      if (powerupsEnabled) {
+        powerupsEnabled = false;
+        
+      }
+      else {
+        powerupsEnabled = true;
+      }
+    }
   }
   //Start menu buttons
   if (start == true){
@@ -474,12 +579,15 @@ void mousePressed() {
       game = true;
       start = false;
       options = false;
+      player1.update_length(paddleh);
+      player2.update_length(paddleh);
       p1_score = 0;
       p2_score = 0;
       balls_left = game_balls;
       for (int i = 0; i < game_balls; i++) {
           b[i].scored = false;
           b[i].reset_ball();
+          b[i].update_radius(ball_radius);
           b[i].start_ball();
       }
     }
@@ -500,5 +608,4 @@ void mouseReleased() {
    mpr[4] = false;
    mpr[5] = false;
    mpr[0] = false;
-
 }

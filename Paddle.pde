@@ -20,7 +20,7 @@ class Paddle {
   
   //move the paddle down
   void move_down(){
-    ypos = constrain(ypos = ypos + paddle_speed, 0, height - paddleh);
+    ypos = constrain(ypos = ypos + speed, 0, height - pheight);
   }
 
   //update speed from the options menu
@@ -30,7 +30,7 @@ class Paddle {
   
   //update the length from the options menu
   void update_length(int l){
-    pheight = l;
+    pheight = constrain(l, 25, 150);
   }
   
   void display() {

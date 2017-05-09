@@ -47,7 +47,7 @@ class Ball {
   
   //update the radius from the options menu
   void update_radius(int r){
-    radius = r;
+    radius = constrain(r, 5, 50);
     diameter = radius*2;
   }
   
