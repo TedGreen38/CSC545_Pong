@@ -1,6 +1,6 @@
 //Class to represent a powerup object
 class PowerUps {
-  int type;
+  int powertype;
   int xpos;
   int ypos;
   color c;
@@ -8,6 +8,7 @@ class PowerUps {
   PowerUps(int type, int startX, int startY) {
     xpos = startX;
     ypos = startY;
+    powertype = type;
     if (type == 0) {
       c = color(255, 0, 0);
     }
@@ -20,9 +21,6 @@ class PowerUps {
     else if (type == 3) {
       c = color(255, 255, 0);
     }
-    else if (type == 4) {
-      c = color(0, 255, 255);
-    }
   }
   
   //draws the powerup (startX and startY are randomly generated)
@@ -32,6 +30,6 @@ class PowerUps {
   }
   
   int getType() {
-    return type;
+    return powertype;
   }
 }

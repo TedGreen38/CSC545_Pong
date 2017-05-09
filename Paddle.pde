@@ -30,7 +30,7 @@ class Paddle {
   
   //update the length from the options menu
   void update_length(int l){
-    pheight = l;
+    pheight = constrain(l, 25, 150);
   }
   
   void display() {
